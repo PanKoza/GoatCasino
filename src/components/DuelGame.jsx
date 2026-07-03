@@ -93,9 +93,15 @@ function PlayerZone({ label, hand, score, bust, balance, bet, isActive, avatar, 
 
       {/* Score */}
       {score != null && (
-        <div className={`mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${bust ? 'bg-red-900/50 text-red-300' : 'bg-gray-800 text-gray-300'}`}>
-          {bust ? 'BUST ' : ''}{score}
-        </div>
+        <motion.div
+          key={score}
+          initial={{ scale: 1.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          className={`mt-1.5 text-3xl font-black ${bust ? 'text-red-400' : 'text-white'}`}
+        >
+          {score}{bust && <span className="text-sm ml-1 font-bold">BUST</span>}
+        </motion.div>
       )}
     </div>
   );
@@ -484,7 +490,7 @@ export default function DuelGame({ onBack, username }) {
         {/* DEALER */}
         <div className="relative z-10 flex flex-col items-center pt-2 shrink-0">
           <div className="text-[10px] text-emerald-500/60 tracking-widest uppercase font-semibold mb-1">
-            Krupier{dealerReveal && dealerHand.length > 0 && <strong className={`ml-1 text-white`}> ({handTotal(dealerHand)})</strong>}
+            Krupier{dealerReveal && dealerHand.length > 0 && <motion.strong key={handTotal(dealerHand)} initial={{ scale: 1.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} className="ml-2 text-2xl text-white font-black"> {handTotal(dealerHand)}</motion.strong>}
           </div>
           <div className="flex gap-1.5 justify-center flex-wrap min-h-[84px]">
             {dealerHand.map((card, i) => (

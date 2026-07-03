@@ -100,9 +100,15 @@ function PlayerPanel({ data, isMe, highlight, phase }) {
 
       {/* Score */}
       {showScore && (
-        <div className={`mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${bust ? 'bg-red-900/60 text-red-300' : 'bg-gray-800 text-gray-300'}`}>
-          {bust ? 'BUST ' : ''}{total}
-        </div>
+        <motion.div
+          key={total}
+          initial={{ scale: 1.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          className={`mt-1.5 text-3xl font-black ${bust ? 'text-red-400' : 'text-white'}`}
+        >
+          {total}{bust && <span className="text-sm ml-1 font-bold">BUST</span>}
+        </motion.div>
       )}
 
       {/* Result overlay */}

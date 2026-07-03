@@ -99,10 +99,22 @@ function DealerTorso() {
 function HandArea({ cards, label, score, bust, active, isDealer, hidden2 }) {
   return (
     <div className={`flex flex-col items-center transition-opacity duration-300 ${!active && !isDealer ? "opacity-50" : ""}`}>
-      <div className={`text-[10px] tracking-widest uppercase font-semibold mb-1.5 ${bust ? "text-red-400" : "text-emerald-400/70"}`}>
-        {label}
-        {score != null && <strong className={`ml-1 ${bust ? "text-red-400" : "text-white"}`}>({score}{bust ? " BUST" : ""})</strong>}
-        {active && !isDealer && <span className="ml-1.5 text-yellow-400">◄</span>}
+      <div className={`flex flex-col items-center mb-2`}>
+        <div className={`text-[10px] tracking-widest uppercase font-semibold ${bust ? "text-red-400" : "text-emerald-400/70"}`}>
+          {label}
+          {active && !isDealer && <span className="ml-1.5 text-yellow-400">◄</span>}
+        </div>
+        {score != null && (
+          <motion.div
+            key={score}
+            initial={{ scale: 1.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            className={`text-3xl font-black mt-0.5 ${bust ? "text-red-400" : "text-white"}`}
+          >
+            {score}{bust ? <span className="text-base ml-1 font-bold">BUST</span> : ""}
+          </motion.div>
+        )}
       </div>
       {active && !isDealer && (
         <motion.div
