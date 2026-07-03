@@ -4,6 +4,7 @@ import Blackjack from './components/Blackjack';
 import DuelGame from './components/DuelGame';
 import OnlineDuel from './components/OnlineDuel';
 import AuthScreen from './components/AuthScreen';
+import Stats from './components/Stats';
 import { api, hasToken, clearSession } from './api';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
   if (currentGame === 'blackjack') return <Blackjack    onBack={handleBackToLobby} username={user.username} />;
   if (currentGame === 'duel')      return <DuelGame     onBack={handleBackToLobby} username={user.username} />;
   if (currentGame === 'online')    return <OnlineDuel   onBack={handleBackToLobby} username={user.username} />;
+  if (currentGame === 'stats')     return <Stats        user={user} onBack={() => setCurrentGame(null)} />;
 
   return <Lobby user={user} onSelectGame={setCurrentGame} onLogout={handleLogout} />;
 }

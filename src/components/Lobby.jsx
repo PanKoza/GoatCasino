@@ -79,6 +79,12 @@ export default function Lobby({ onSelectGame, user, onLogout }) {
                   <div className="text-sm font-black text-yellow-400 leading-tight">${user.balance?.toLocaleString()}</div>
                 </div>
                 <button
+                  onClick={() => onSelectGame('stats')}
+                  className="text-xs text-gray-400 hover:text-emerald-400 font-semibold transition-colors border border-gray-700 hover:border-emerald-700 rounded-lg px-3 py-1.5"
+                >
+                  📊 Statystyki
+                </button>
+                <button
                   onClick={onLogout}
                   className="text-xs text-gray-500 hover:text-red-400 font-semibold transition-colors border border-gray-700 hover:border-red-700/50 rounded-lg px-3 py-1.5"
                 >

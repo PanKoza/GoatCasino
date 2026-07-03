@@ -756,8 +756,10 @@ export default function Blackjack({ onBack, username }) {
               </div>
               <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
                 onClick={deal} disabled={bet > balance}
-                className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background:"#065f46", boxShadow:"0 4px 20px rgba(16,185,129,0.35)" }}>
+                className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                style={status === STATUS.DONE
+                  ? { background:"#10b981", boxShadow:"0 4px 28px rgba(16,185,129,0.6)", color:"#fff" }
+                  : { background:"#065f46", boxShadow:"0 4px 20px rgba(16,185,129,0.35)" }}>
                 {status === STATUS.DONE ? "NASTEPNA RUNDA" : "ROZDAJ KARTY"}
               </motion.button>
             </motion.div>
