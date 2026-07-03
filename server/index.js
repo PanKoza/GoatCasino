@@ -31,6 +31,18 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
+// ── Serve React frontend in production ────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  const distPath = path.join(__dirname, '../dist');
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/socket.io')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    }
+  });
+}
+
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: 'Wewnętrzny błąd serwera.' });

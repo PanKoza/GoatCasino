@@ -1,37 +1,15 @@
 services:
-  # ── Backend API (Node.js) ──────────────────────────────────────
+  # ── Full-stack Web Service (API + Frontend) ────────────────────
   - type: web
-    name: goatcasino-api
+    name: goatcasino
     runtime: node
-    buildCommand: cd server && npm install
+    buildCommand: npm install && npm run build && cd server && npm install
     startCommand: cd server && node index.js
     plan: free
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: MONGO_URI
-        sync: false          # Set manually in Render dashboard
+        sync: false
       - key: JWT_SECRET
-        generateValue: true  # Render auto-generates a secure random value
-      - key: FRONTEND_URL
-        sync: false          # Set to https://goatcasino-app.onrender.com after deploy
-
-  # ── Frontend (Static Site) ────────────────────────────────────
-  - type: static
-    name: goatcasino-app
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    plan: free
-    envVars:
-      - key: VITE_API_URL
-        sync: false          # Set to https://goatcasino-api.onrender.com after deploy
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: no-cache
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+        generateValue: true
