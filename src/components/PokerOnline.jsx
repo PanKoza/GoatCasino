@@ -8,79 +8,121 @@ import PlayingCard from './PlayingCard';
 const BIG_BLIND = 50;
 const PHASE_LABEL = { preflop:'Pre-flop', flop:'Flop', turn:'Turn', river:'River', showdown:'Showdown', lobby:'Lobby', game_over:'Koniec gry' };
 
-// ── Hidden card (opponent) ────────────────────────────────────────
-function HiddenCard({ dealDelay = 0 }) {
+// ── Hidden card (opponent back) ───────────────────────────────────
+function HiddenCard({ dealDelay = 0, small = false }) {
+  const cls = small
+    ? 'w-9 h-13 rounded-lg border border-emerald-500'
+    : 'w-14 h-20 rounded-xl border-2 border-emerald-500';
   return (
     <motion.div
-      initial={{ x: 200, y: -120, rotate: 20, opacity: 0, scale: 0.7 }}
+      initial={{ x: 160, y: -100, rotate: 18, opacity: 0, scale: 0.7 }}
       animate={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }}
-      transition={{ delay: dealDelay, duration: 0.45, type: 'spring', stiffness: 200, damping: 22 }}
-      className="w-12 h-16 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-950 border-2 border-emerald-500 flex items-center justify-center shadow-lg"
+      transition={{ delay: dealDelay, duration: 0.42, type: 'spring', stiffness: 210, damping: 22 }}
+      className={`${cls} bg-gradient-to-br from-emerald-700 to-emerald-950 flex items-center justify-center shadow-lg`}
     >
-      <span className="text-emerald-300 text-xl select-none">🂠</span>
+      <span className={`text-emerald-300 select-none ${small ? 'text-base' : 'text-2xl'}`}>🂠</span>
     </motion.div>
   );
 }
 
-// ── Player seat ───────────────────────────────────────────────────
-function Seat({ player, isMe, isActive, community, phase, dealKey }) {
-  const handEv = isMe && player.hand?.filter(Boolean).length === 2 && community.length >= 3
-    ? evaluateHand([...player.hand, ...community])
-    : null;
-
-  const cardScale = isMe ? 1 : 0.75;
-
+// ── Opponent seat (compact, shown above the table) ────────────────
+function OpponentSeat({ player, isActive, dealKey }) {
+  const hasCards = player.hand?.some(Boolean);
   return (
-    <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${player.folded ? 'opacity-25' : ''}`}>
-      {/* Name + chips */}
-      <div className="text-center">
-        <div className={`text-xs font-bold truncate max-w-[100px] ${isMe ? 'text-emerald-400' : 'text-gray-300'}`}>
-          {player.name}{isMe ? ' (Ty)' : ''}
-        </div>
-        <div className="text-xs text-yellow-400 font-black">${player.chips}</div>
-        {player.currentBet > 0 && <div className="text-[10px] text-blue-300">Bet: ${player.currentBet}</div>}
-      </div>
-
-      {/* Cards */}
-      <div className={`relative rounded-2xl p-2 border-2 transition-all ${
+    <motion.div
+      animate={isActive && !player.folded ? { y: [0, -4, 0] } : {}}
+      transition={{ repeat: Infinity, duration: 1.2 }}
+      className={`flex flex-col items-center gap-1.5 transition-opacity duration-300 ${player.folded ? 'opacity-20' : ''}`}
+    >
+      {/* Cards (small) */}
+      <div className={`relative rounded-2xl px-2 pt-2 pb-1.5 border-2 transition-all duration-300 ${
         isActive && !player.folded
-          ? 'border-yellow-400 shadow-xl shadow-yellow-400/40 bg-yellow-900/20'
-          : 'border-gray-700/40 bg-gray-900/30'
+          ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 bg-yellow-950/30'
+          : 'border-gray-700/30 bg-black/20'
       }`}>
-        <div className="flex gap-1.5 justify-center" style={{ transform: `scale(${cardScale})`, transformOrigin: 'top center' }}>
-          {isMe ? (
-            player.hand?.map((card, i) =>
-              card
-                ? <PlayingCard key={`${dealKey}-${i}`} card={card} fromDeck dealDelay={i * 0.18} />
-                : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-700/30" />
-            )
-          ) : (
-            [0, 1].map(i =>
-              player.hand?.[i]
-                ? <PlayingCard key={`${dealKey}-${i}`} card={player.hand[i]} fromDeck dealDelay={i * 0.18} />
-                : <HiddenCard key={`${dealKey}-h${i}`} dealDelay={i * 0.18} />
-            )
+        <div className="flex gap-1 justify-center">
+          {[0, 1].map(i =>
+            player.hand?.[i]
+              ? <PlayingCard key={`${dealKey}-opp-${player.id}-${i}`} card={player.hand[i]} fromDeck dealDelay={i * 0.18} />
+              : <HiddenCard key={`${dealKey}-h-${player.id}-${i}`} dealDelay={i * 0.16} small />
           )}
         </div>
-
-        {/* Badges */}
-        <div className="absolute -top-2.5 -right-2.5 flex gap-0.5">
-          {player.isDealer && <span className="text-[9px] bg-white text-gray-900 font-black rounded-full w-5 h-5 flex items-center justify-center shadow">D</span>}
-          {player.isSB && <span className="text-[9px] bg-blue-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow">S</span>}
-          {player.isBB && <span className="text-[9px] bg-orange-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow">B</span>}
+        {/* Role badges */}
+        <div className="absolute -top-2 -right-2 flex gap-0.5 z-10">
+          {player.isDealer && <span className="text-[8px] bg-white text-gray-900 font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">D</span>}
+          {player.isSB    && <span className="text-[8px] bg-blue-500 text-white font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">S</span>}
+          {player.isBB    && <span className="text-[8px] bg-orange-500 text-white font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">B</span>}
         </div>
         {player.allIn && (
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow">
+          <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 text-[8px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded-full whitespace-nowrap shadow-md z-10">
             ALL-IN
           </div>
         )}
       </div>
 
-      {handEv && !player.folded && (
-        <div className="text-[10px] text-purple-200 font-bold bg-purple-800/50 border border-purple-600/40 px-2 py-0.5 rounded-full shadow">
-          {handEv.name}
+      {/* Nameplate */}
+      <div className={`rounded-xl px-3 py-1 text-center min-w-[72px] border transition-all ${
+        isActive && !player.folded
+          ? 'bg-yellow-900/40 border-yellow-600/60'
+          : 'bg-black/40 border-gray-700/40'
+      }`}>
+        <div className="text-[11px] font-bold text-gray-200 truncate max-w-[80px]">{player.name}</div>
+        <div className="text-[11px] font-black text-yellow-400">${player.chips}</div>
+        {player.currentBet > 0 && (
+          <div className="text-[9px] text-blue-300 font-semibold">Bet: ${player.currentBet}</div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── My seat (large, at the bottom) ───────────────────────────────
+function MySeat({ player, isActive, community, dealKey }) {
+  const handEv = player.hand?.filter(Boolean).length === 2 && community.length >= 3
+    ? evaluateHand([...player.hand, ...community])
+    : null;
+
+  return (
+    <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${player.folded ? 'opacity-30' : ''}`}>
+      {/* Cards */}
+      <div className={`relative rounded-3xl px-4 pt-3 pb-2 border-2 transition-all duration-300 ${
+        isActive && !player.folded
+          ? 'border-yellow-400 shadow-2xl shadow-yellow-400/40 bg-yellow-950/20'
+          : 'border-emerald-800/50 bg-black/30'
+      }`}>
+        <div className="flex gap-3 justify-center">
+          {player.hand?.map((card, i) =>
+            card
+              ? <PlayingCard key={`${dealKey}-me-${i}`} card={card} fromDeck dealDelay={i * 0.18} />
+              : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-700/30" />
+          )}
         </div>
-      )}
+        {/* Role badges */}
+        <div className="absolute -top-2.5 -right-2.5 flex gap-0.5 z-10">
+          {player.isDealer && <span className="text-[9px] bg-white text-gray-900 font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">D</span>}
+          {player.isSB    && <span className="text-[9px] bg-blue-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">S</span>}
+          {player.isBB    && <span className="text-[9px] bg-orange-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow-md">B</span>}
+        </div>
+        {player.allIn && (
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md z-10">
+            ALL-IN
+          </div>
+        )}
+      </div>
+
+      {/* Nameplate */}
+      <div className="flex items-center gap-3 bg-black/50 border border-emerald-800/60 rounded-2xl px-5 py-2">
+        <div>
+          <div className="text-xs font-bold text-emerald-400">{player.name} (Ty)</div>
+          <div className="text-sm font-black text-yellow-400">${player.chips}</div>
+          {player.currentBet > 0 && <div className="text-[10px] text-blue-300 font-semibold">Bet: ${player.currentBet}</div>}
+        </div>
+        {handEv && !player.folded && (
+          <div className="text-[10px] text-purple-200 font-bold bg-purple-800/60 border border-purple-500/40 px-2 py-1 rounded-xl text-center">
+            {handEv.name}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
