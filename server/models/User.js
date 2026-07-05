@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
 userSchema.virtual('rankScore').get(function () {
   if (this.gamesPlayed === 0) return 0;
   const winRate = this.gamesWon / this.gamesPlayed;
-  return Math.round(winRate * 1000 + this.totalProfit * 0.1 + this.gamesWon * 50 + (this.rankBonus ?? 0));
+  return Math.round(winRate * 600 + this.gamesWon * 4 + this.totalProfit * 0.01 + (this.rankBonus ?? 0));
 });
 
 module.exports = mongoose.model('User', userSchema);

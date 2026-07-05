@@ -74,7 +74,7 @@ export default function Stats({ user, onBack }) {
   const winRate    = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
   const avgProfit  = gamesPlayed > 0 ? Math.round(totalProfit / gamesPlayed) : 0;
   const rankScore  = gamesPlayed > 0
-    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50 + rankBonus)
+    ? Math.round((gamesWon / gamesPlayed) * 600 + gamesWon * 4 + totalProfit * 0.01 + rankBonus)
     : 0;
 
   const tier =

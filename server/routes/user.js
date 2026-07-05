@@ -88,7 +88,7 @@ router.get('/leaderboard', async (_req, res) => {
   const ranked = users
     .map((u) => {
       const winRate = u.gamesPlayed > 0 ? u.gamesWon / u.gamesPlayed : 0;
-      const score = Math.round(winRate * 1000 + u.totalProfit * 0.1 + u.gamesWon * 50);
+      const score = Math.round(winRate * 600 + u.gamesWon * 4 + u.totalProfit * 0.01 + (u.rankBonus ?? 0));
       return { ...u, winRate: Math.round(winRate * 100), score };
     })
     .sort((a, b) => b.score - a.score)
