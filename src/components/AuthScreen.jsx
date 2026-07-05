@@ -15,6 +15,14 @@ export default function AuthScreen({ onAuth }) {
     setError('');
 
     if (mode === 'register') {
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        setError('Nazwa użytkownika może zawierać tylko litery, cyfry i _.');
+        return;
+      }
+      if (username.length < 3) {
+        setError('Nazwa użytkownika musi mieć co najmniej 3 znaki.');
+        return;
+      }
       if (password !== confirm) {
         setError('Hasła nie są identyczne.');
         return;

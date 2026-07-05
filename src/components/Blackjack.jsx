@@ -243,12 +243,14 @@ export default function Blackjack({ onBack, username }) {
   }, [balance]); // eslint-disable-line
 
   // Check session win/loss after balance changes
+  const MIN_BET = 10;
   useEffect(() => {
     if (status === STATUS.DONE) {
       if (balance >= WIN_TARGET) {
         say("session_win"); setMood("shocked");
         setTimeout(() => setStatus(STATUS.SESSION_WIN), 1200);
-      } else if (balance <= 0) {
+      } else if (balance < MIN_BET) {
+        // Can't afford minimum bet – session over
         say("session_lose"); setMood("happy");
         setTimeout(() => setStatus(STATUS.SESSION_LOSE), 1200);
       }

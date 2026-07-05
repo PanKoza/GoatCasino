@@ -170,9 +170,7 @@ export default function Stats({ user, onBack }) {
 
               <motion.div variants={container} initial="hidden" animate="show"
                 className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <StatCard icon="💰" label="Saldo"         value={`$${balance.toLocaleString()}`}
-                  color={balance >= 500 ? 'text-emerald-400' : 'text-red-400'} />
-                <StatCard icon="📈" label="Zysk netto"    value={`${totalProfit >= 0 ? '+' : ''}$${totalProfit}`}
+                <StatCard icon="" label="Zysk netto"    value={`${totalProfit >= 0 ? '+' : ''}$${totalProfit}`}
                   color={totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'} />
                 <StatCard icon="🚀" label="Szczyt sesji"  value={`$${bestSession.toLocaleString()}`} color="text-purple-400" />
                 <StatCard icon="📊" label="Śr. zysk/sesja" value={`${avgProfit >= 0 ? '+' : ''}$${avgProfit}`}

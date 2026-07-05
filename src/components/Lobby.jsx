@@ -297,7 +297,9 @@ export default function Lobby({ onSelectGame, user, onLogout }) {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <div className="text-xs text-gray-500 leading-none">👤 {user.username}</div>
-                  <div className="text-sm font-black text-yellow-400 leading-tight">${user.balance?.toLocaleString()}</div>
+                  <div className="text-sm font-black text-yellow-400 leading-tight">
+                    {user.totalProfit >= 0 ? '+' : ''}{user.totalProfit}$ netto
+                  </div>
                 </div>
                 <button
                   onClick={() => onSelectGame('stats')}
@@ -342,7 +344,7 @@ export default function Lobby({ onSelectGame, user, onLogout }) {
                       <span className="text-2xl">👤</span>
                       <div>
                         <div className="text-sm font-bold text-white">{user.username}</div>
-                        <div className="text-base font-black text-yellow-400">${user.balance?.toLocaleString()}</div>
+                        <div className="text-sm font-black text-yellow-400">{user.totalProfit >= 0 ? '+' : ''}{user.totalProfit}$ netto</div>
                       </div>
                       <div className="ml-auto flex items-center gap-1.5 bg-emerald-900/40 border border-emerald-700/40 px-3 py-1 rounded-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
