@@ -263,7 +263,8 @@ export default function Blackjack({ onBack, username }) {
       sessionSavedRef.current = true;
       const won = status === STATUS.SESSION_WIN;
       const profit = balance - SESSION_START;
-      api.saveGameResult(won, profit, peakBalance).catch(() => {});
+      const rankBonus = won ? 2 : -1;
+      api.saveGameResult(won, profit, peakBalance, 'blackjack', rankBonus).catch(() => {});
     }
   }, [status]); // eslint-disable-line
 

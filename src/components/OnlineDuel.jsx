@@ -207,7 +207,8 @@ export default function OnlineDuel({ onBack, username }) {
       savedRef.current = true;
       const meWon = gameState.me.balance >= WIN_TARGET || (gameState.opponent.balance <= 0 && gameState.me.balance > 0);
       const profit = gameState.me.balance - SESSION_START;
-      api.saveGameResult(meWon, profit, gameState.me.balance).catch(() => {});
+      const rankBonus = meWon ? 35 : -5;
+      api.saveGameResult(meWon, profit, gameState.me.balance, 'blackjack', rankBonus).catch(() => {});
     }
   }, [gameState?.phase]); // eslint-disable-line
 

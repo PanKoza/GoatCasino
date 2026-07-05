@@ -79,9 +79,9 @@ export default function Stats({ user, onBack }) {
 
   const tier =
     gamesPlayed === 0    ? { label: 'NIEKLASYFIKOWANY', color: 'text-gray-500',   icon: '❓' } :
-    rankScore >= 3000    ? { label: 'JOKER',            color: 'text-yellow-300', icon: '🃏' } :
-    rankScore >= 1500    ? { label: 'AS',               color: 'text-purple-400', icon: '🂡' } :
-    rankScore >= 700     ? { label: 'KRÓL',             color: 'text-blue-400',   icon: '♚'  } :
+    rankScore >= 5000    ? { label: 'JOKER',            color: 'text-yellow-300', icon: '🃏' } :
+    rankScore >= 2000    ? { label: 'AS',               color: 'text-purple-400', icon: '🂡' } :
+    rankScore >= 800     ? { label: 'KRÓL',             color: 'text-blue-400',   icon: '♚'  } :
     rankScore >= 200     ? { label: 'KRÓLOWA',          color: 'text-emerald-400',icon: '♛'  } :
                            { label: 'JOPEK',            color: 'text-orange-400', icon: '🎴' };
 

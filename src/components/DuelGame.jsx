@@ -30,15 +30,15 @@ const DIFFICULTIES = [
 const BOT_NAMES = { easy: 'GoatBot Jr.', medium: 'GoatBot Pro', hard: 'GoatBot Shark' };
 
 const DIFFICULTY_RANK_BONUS = {
-  easy:    50,  // małe wsparcie dla początkujących
-  medium: 200,  // solidna nagroda
-  hard:   500,  // duża nagroda za trudne wyzwanie
+  easy:   6,
+  medium: 20,
+  hard:   25,  // mniej niż Online – celowo premiujemy grę online
 };
 
 const DIFFICULTY_RANK_PENALTY = {
-  easy:  -100, // dużo odejmowane – przegrana z łatwym botem
-  medium: -50, // umiarkowane odejmowanie
-  hard:     0, // brak kary – trudny przeciwnik
+  easy:  -12,
+  medium: -6,
+  hard:    0,
 };
 
 function SmallCard({ card, hidden }) {

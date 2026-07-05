@@ -6,21 +6,21 @@ import Leaderboard from './Leaderboard';
 function getRank(user) {
   const { gamesPlayed = 0, gamesWon = 0, totalProfit = 0, rankBonus = 0 } = user ?? {};
   const score = gamesPlayed > 0
-    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50 + rankBonus)
+    ? Math.round((gamesWon / gamesPlayed) * 600 + gamesWon * 4 + totalProfit * 0.01 + rankBonus)
     : 0;
   if (gamesPlayed === 0)  return { label: 'NIEKLASYFIKOWANY', color: '#6b7280', glow: '#6b7280', cardRank: '?',  cardSuit: '✦', score };
-  if (score >= 3000)      return { label: 'JOKER',            color: '#fbbf24', glow: '#f59e0b', cardRank: 'JK', cardSuit: '★', score };
-  if (score >= 1500)      return { label: 'AS',               color: '#a855f7', glow: '#9333ea', cardRank: 'A',  cardSuit: '♠', score };
-  if (score >= 700)       return { label: 'KRÓL',             color: '#60a5fa', glow: '#3b82f6', cardRank: 'K',  cardSuit: '♥', score };
+  if (score >= 5000)      return { label: 'JOKER',            color: '#fbbf24', glow: '#f59e0b', cardRank: 'JK', cardSuit: '★', score };
+  if (score >= 2000)      return { label: 'AS',               color: '#a855f7', glow: '#9333ea', cardRank: 'A',  cardSuit: '♠', score };
+  if (score >= 800)       return { label: 'KRÓL',             color: '#60a5fa', glow: '#3b82f6', cardRank: 'K',  cardSuit: '♥', score };
   if (score >= 200)       return { label: 'KRÓLOWA',          color: '#34d399', glow: '#10b981', cardRank: 'Q',  cardSuit: '♦', score };
   return                         { label: 'JOPEK',            color: '#fb923c', glow: '#f97316', cardRank: 'J',  cardSuit: '♣', score };
 }
 
 const RANK_NEXT = [
   { threshold: 200,  label: 'KRÓLOWA' },
-  { threshold: 700,  label: 'KRÓL' },
-  { threshold: 1500, label: 'AS' },
-  { threshold: 3000, label: 'JOKER' },
+  { threshold: 800,  label: 'KRÓL' },
+  { threshold: 2000, label: 'AS' },
+  { threshold: 5000, label: 'JOKER' },
 ];
 
 // ── Animated rank card ────────────────────────────────────────────
@@ -70,7 +70,7 @@ function RankCard({ rank }) {
 }
 
 // ── Rank banner ───────────────────────────────────────────────────
-function RankBanner({ user }) {
+function RankBanner({ user, onRankInfo }) {
   const rank = getRank(user);
   const gamesPlayed = user?.gamesPlayed ?? 0;
   const nextRank = RANK_NEXT.find(r => rank.score < r.threshold);
@@ -89,63 +89,67 @@ function RankBanner({ user }) {
       className="max-w-5xl mx-auto w-full px-6 mb-6"
     >
       <div
-        className="rounded-2xl p-4 sm:p-5 flex items-center gap-5 relative overflow-hidden"
+        className="rounded-2xl p-4 sm:p-5 flex items-center gap-4 sm:gap-6 relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%)`,
-          border: `1px solid ${rank.color}44`,
-          boxShadow: `0 0 40px ${rank.glow}22`,
+          background: `linear-gradient(135deg, ${rank.glow}22 0%, rgba(5,15,10,0.95) 60%)`,
+          border: `1px solid ${rank.color}66`,
+          boxShadow: `0 0 40px ${rank.glow}33, inset 0 1px 0 ${rank.color}22`,
         }}
       >
         {/* Background glow */}
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at 10% 50%, ${rank.glow}18 0%, transparent 60%)` }} />
+          style={{ background: `radial-gradient(ellipse at 0% 50%, ${rank.glow}28 0%, transparent 55%)` }} />
 
         {/* Card */}
         <RankCard rank={rank} />
 
         {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xs text-gray-500 tracking-widest uppercase font-semibold">Twoja ranga</span>
-          </div>
+        <div className="flex-1 min-w-0 relative z-10">
+          <div className="text-[10px] text-gray-500 tracking-widest uppercase font-semibold mb-0.5">Twoja ranga</div>
+
           <motion.div
             key={rank.label}
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="text-2xl sm:text-3xl font-black tracking-widest mb-1"
-            style={{ color: rank.color }}
+            className="text-3xl sm:text-4xl font-black tracking-widest mb-1 drop-shadow-lg"
+            style={{ color: rank.color, textShadow: `0 0 20px ${rank.glow}88` }}
           >
             {rank.label}
           </motion.div>
 
           {/* Score */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-yellow-400 font-black text-lg">{rank.score}</span>
-            <span className="text-gray-500 text-xs">punktów rankingowych</span>
+            <motion.span key={rank.score} initial={{ scale: 1.3 }} animate={{ scale: 1 }}
+              className="text-yellow-400 font-black text-xl">{rank.score}</motion.span>
+            <span className="text-gray-400 text-xs">pkt rankingowych</span>
+            <button onClick={onRankInfo}
+              className="ml-auto text-[10px] text-gray-500 hover:text-emerald-400 transition-colors border border-gray-700/50 hover:border-emerald-700/50 rounded-lg px-2 py-1">
+              ℹ️ System rang
+            </button>
           </div>
 
           {/* Progress to next rank */}
           {nextRank ? (
             <div>
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Postęp do <span className="font-bold" style={{ color: rank.color }}>{nextRank.label}</span></span>
-                <span>{progress}%</span>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-gray-400">Postęp do <span className="font-black" style={{ color: rank.color }}>{nextRank.label}</span></span>
+                <span className="font-bold" style={{ color: rank.color }}>{progress}%</span>
               </div>
-              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-gray-800/80 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
-                  className="h-2 rounded-full"
-                  style={{ background: `linear-gradient(90deg, ${rank.color}99, ${rank.color})` }}
+                  className="h-2.5 rounded-full"
+                  style={{ background: `linear-gradient(90deg, ${rank.color}88, ${rank.color})`, boxShadow: `0 0 8px ${rank.glow}` }}
                 />
               </div>
               <div className="text-xs text-gray-600 mt-1">
-                Potrzebujesz jeszcze <span className="text-gray-400 font-semibold">{nextRank.threshold - rank.score} pkt</span>
+                Brakuje <span className="text-gray-300 font-bold">{nextRank.threshold - rank.score} pkt</span>
               </div>
             </div>
           ) : (
-            <div className="text-xs text-yellow-400 font-bold tracking-widest">
+            <div className="text-sm font-black tracking-widest" style={{ color: rank.color }}>
               ✦ NAJWYŻSZA RANGA OSIĄGNIĘTA ✦
             </div>
           )}
@@ -153,9 +157,9 @@ function RankBanner({ user }) {
 
         {/* Games played badge */}
         {gamesPlayed > 0 && (
-          <div className="hidden sm:flex flex-col items-center gap-1 shrink-0">
+          <div className="hidden sm:flex flex-col items-center gap-1 shrink-0 bg-gray-900/50 border border-gray-700/40 rounded-xl px-4 py-3">
             <span className="text-2xl font-black text-white">{gamesPlayed}</span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest">rozegranych</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">sesji</span>
           </div>
         )}
       </div>
@@ -388,7 +392,7 @@ export default function Lobby({ onSelectGame, user, onLogout }) {
       </motion.div>
 
       {/* Rank banner */}
-      {user && <RankBanner user={user} />}
+      {user && <RankBanner user={user} onRankInfo={() => onSelectGame('rankinfo')} />}
 
       {/* Stats bar */}
       {user && (user.gamesPlayed > 0) && (

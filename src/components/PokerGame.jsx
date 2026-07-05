@@ -515,7 +515,11 @@ export default function PokerGame({ mode, onBack }) {
         const humanPlayer = base.players.find(p => p.isHuman);
         const humanWins = humanPlayer && humanPlayer.chips > 0;
         const profit = (humanPlayer?.chips ?? 0) - START_CHIPS;
-        api.saveGameResult(humanWins, profit, humanPlayer?.chips ?? 0, 'poker').catch(() => {});
+        // Bonus: 1v1 = +4/-2, 4 bots = +10/-2
+        const bonusWin  = mode === '1v1' ? 8 : 15;
+        const bonusLose = mode === '1v1' ? -2 : -3;
+        const rankBonus = humanWins ? bonusWin : bonusLose;
+        api.saveGameResult(humanWins, profit, humanPlayer?.chips ?? 0, 'poker', rankBonus).catch(() => {});
       }
       return setGs({ ...base, gameOver: true, log: [...base.log, 'Koniec gry!'] });
     }

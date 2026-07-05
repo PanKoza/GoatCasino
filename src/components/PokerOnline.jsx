@@ -136,8 +136,9 @@ export default function PokerOnline({ onBack, username }) {
           savedRef.current = true;
           const me = state.players[state.myIdx];
           const won = me && me.chips > 0;
-          const profit = (me?.chips ?? 0) - 500; // START_CHIPS
-          api.saveGameResult(won, profit, me?.chips ?? 0, 'poker').catch(() => {});
+          const profit = (me?.chips ?? 0) - 500;
+          const rankBonus = won ? 60 : -10;
+          api.saveGameResult(won, profit, me?.chips ?? 0, 'poker', rankBonus).catch(() => {});
         }
         return state;
       });

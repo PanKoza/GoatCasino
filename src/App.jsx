@@ -9,6 +9,7 @@ import BlackjackTutorial from './components/BlackjackTutorial';
 import PokerGame from './components/PokerGame';
 import PokerOnline from './components/PokerOnline';
 import PokerTutorial from './components/PokerTutorial';
+import RankInfo from './components/RankInfo';
 import { api, hasToken, clearSession } from './api';
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
   if (currentGame === 'poker_bots_tutorial')   return <PokerTutorial mode="bots"   onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('poker_bots')} />;
   if (currentGame === 'poker_online_tutorial') return <PokerTutorial mode="online" onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('poker_online')} />;
   if (currentGame === 'stats')     return <Stats        user={user} onBack={() => setCurrentGame(null)} />;
+  if (currentGame === 'rankinfo')  return <RankInfo     user={user} onBack={() => setCurrentGame(null)} />;
 
   return <Lobby user={user} onSelectGame={setCurrentGame} onLogout={handleLogout} />;
 }
