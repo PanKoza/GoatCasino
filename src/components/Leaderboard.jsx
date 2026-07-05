@@ -4,6 +4,17 @@ import { api } from '../api';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
+function getRankBadge(entry) {
+  const score = entry.score ?? 0;
+  const played = entry.gamesPlayed ?? 0;
+  if (played === 0) return { label: '?', color: '#6b7280' };
+  if (score >= 5000) return { label: 'JK', color: '#fbbf24' };
+  if (score >= 2000) return { label: 'A',  color: '#a855f7' };
+  if (score >= 800)  return { label: 'K',  color: '#60a5fa' };
+  if (score >= 200)  return { label: 'Q',  color: '#34d399' };
+  return                    { label: 'J',  color: '#fb923c' };
+}
+
 export default function Leaderboard({ currentUserId }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +54,8 @@ export default function Leaderboard({ currentUserId }) {
           {/* Header */}
           <div className="flex items-center text-[10px] text-gray-500 font-semibold tracking-widest uppercase pb-1 border-b border-gray-800">
             <span className="w-8">#</span>
+            <span className="w-8"></span>
             <span className="flex-1">Gracz</span>
-            <span className="w-14 text-right">Wyg.</span>
             <span className="w-14 text-right">W/R</span>
             <span className="w-16 text-right">Zysk</span>
             <span className="w-14 text-right">Pkt</span>
@@ -53,6 +64,7 @@ export default function Leaderboard({ currentUserId }) {
           <AnimatePresence>
             {entries.map((entry, i) => {
               const isMe = entry._id === currentUserId;
+              const badge = getRankBadge(entry);
               return (
                 <motion.div
                   key={entry._id}
@@ -65,27 +77,33 @@ export default function Leaderboard({ currentUserId }) {
                       : i < 3 ? 'bg-yellow-900/10' : 'hover:bg-gray-800/40'
                   }`}
                 >
-                  <span className="w-8 text-center font-black text-base">
+                  <span className="w-8 text-center font-black text-base shrink-0">
                     {i < 3 ? MEDAL[i] : <span className="text-gray-500 text-xs">{i + 1}</span>}
                   </span>
-                  <span className={`flex-1 font-bold truncate ${isMe ? 'text-emerald-400' : 'text-white'}`}>
+                  {/* Rank badge */}
+                  <div className="w-8 flex justify-center shrink-0">
+                    <div className="w-6 h-8 rounded-md bg-white flex flex-col items-center justify-center leading-none shadow"
+                      style={{ border: `1.5px solid ${badge.color}`, color: badge.color === '#fbbf24' ? '#d97706' : (badge.color === '#34d399' || badge.color === '#60a5fa' || badge.color === '#a855f7') ? '#111827' : '#111827' }}>
+                      <span className="text-[9px] font-black" style={{ color: badge.color === '#60a5fa' ? '#1e40af' : badge.color === '#a855f7' ? '#7e22ce' : badge.color === '#34d399' ? '#065f46' : badge.color === '#fbbf24' ? '#92400e' : badge.color }}>{badge.label}</span>
+                    </div>
+                  </div>
+                  <span className={`flex-1 font-bold truncate min-w-0 ${isMe ? 'text-emerald-400' : 'text-white'}`}>
                     {entry.username}{isMe && <span className="ml-1 text-xs text-emerald-500">(Ty)</span>}
                   </span>
-                  <span className="w-14 text-right text-gray-300 text-xs">{entry.gamesWon}</span>
-                  <span className="w-14 text-right text-xs font-semibold" style={{
+                  <span className="w-14 text-right text-xs font-semibold shrink-0" style={{
                     color: entry.winRate >= 50 ? '#34d399' : entry.winRate >= 30 ? '#fbbf24' : '#f87171'
                   }}>{entry.winRate}%</span>
-                  <span className={`w-16 text-right text-xs font-bold ${entry.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`w-16 text-right text-xs font-bold shrink-0 ${entry.totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {entry.totalProfit >= 0 ? '+' : ''}{entry.totalProfit}$
                   </span>
-                  <span className="w-14 text-right text-yellow-400 font-black text-xs">{entry.score}</span>
+                  <span className="w-14 text-right text-yellow-400 font-black text-xs shrink-0">{entry.score}</span>
                 </motion.div>
               );
             })}
           </AnimatePresence>
 
           <p className="text-[10px] text-gray-600 text-center pt-2">
-            Punkty = win_rate × 1000 + zysk × 0.1 + wygrane × 50
+            Pkt = winRate×600 + wins×4 + profit×0.01 + rankBonus
           </p>
         </div>
       )}
