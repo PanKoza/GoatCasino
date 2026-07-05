@@ -22,9 +22,9 @@ const PHASE = {
 };
 
 const DIFFICULTIES = [
-  { id: 'easy',   label: 'Łatwy',   icon: '🐣', color: '#22c55e', desc: 'Bot gra losowo – idealny dla początkujących. Bonus za wygraną: +50 pkt' },
-  { id: 'medium', label: 'Średni',  icon: '🦊', color: '#f59e0b', desc: 'Podstawowa strategia – dobre wyzwanie. Bonus za wygraną: +200 pkt' },
-  { id: 'hard',   label: 'Trudny',  icon: '🦈', color: '#ef4444', desc: 'Pełna basic strategy – prawie nie do pokonania. Bonus za wygraną: +500 pkt' },
+  { id: 'easy',   label: 'Łatwy',   icon: '🐣', color: '#22c55e', desc: 'Bot gra losowo. Wygrana: +50 pkt · Przegrana: -100 pkt' },
+  { id: 'medium', label: 'Średni',  icon: '🦊', color: '#f59e0b', desc: 'Podstawowa strategia. Wygrana: +200 pkt · Przegrana: -50 pkt' },
+  { id: 'hard',   label: 'Trudny',  icon: '🦈', color: '#ef4444', desc: 'Pełna basic strategy. Wygrana: +500 pkt · Przegrana: 0 pkt' },
 ];
 
 const BOT_NAMES = { easy: 'GoatBot Jr.', medium: 'GoatBot Pro', hard: 'GoatBot Shark' };
@@ -33,6 +33,12 @@ const DIFFICULTY_RANK_BONUS = {
   easy:    50,  // małe wsparcie dla początkujących
   medium: 200,  // solidna nagroda
   hard:   500,  // duża nagroda za trudne wyzwanie
+};
+
+const DIFFICULTY_RANK_PENALTY = {
+  easy:  -100, // dużo odejmowane – przegrana z łatwym botem
+  medium: -50, // umiarkowane odejmowanie
+  hard:     0, // brak kary – trudny przeciwnik
 };
 
 function SmallCard({ card, hidden }) {
@@ -255,8 +261,10 @@ export default function DuelGame({ onBack, username }) {
     if ((phase === PHASE.DUEL_WIN || phase === PHASE.DUEL_LOSE) && !savedRef.current) {
       savedRef.current = true;
       const won = phase === PHASE.DUEL_WIN;
-      const bonus = won ? (DIFFICULTY_RANK_BONUS[difficulty] ?? 0) : 0;
-      api.saveGameResult(won, playerBal - SESSION_START, playerBal, 'blackjack', bonus).catch(() => {});
+      const rankBonus = won
+        ? (DIFFICULTY_RANK_BONUS[difficulty] ?? 0)
+        : (DIFFICULTY_RANK_PENALTY[difficulty] ?? 0);
+      api.saveGameResult(won, playerBal - SESSION_START, playerBal, 'blackjack', rankBonus).catch(() => {});
     }
   }, [phase]); // eslint-disable-line
 

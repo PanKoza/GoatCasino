@@ -34,7 +34,7 @@ router.post('/game-result', authMiddleware, async (req, res) => {
     gamesPlayed: 1,
     gamesWon: won ? 1 : 0,
     totalProfit: profit,
-    rankBonus: typeof rankBonus === 'number' ? Math.max(0, rankBonus) : 0,
+    rankBonus: typeof rankBonus === 'number' ? rankBonus : 0,
   };
 
   if (gameType === 'poker') {
