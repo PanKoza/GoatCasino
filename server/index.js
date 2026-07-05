@@ -9,6 +9,7 @@ const jwt     = require('jsonwebtoken');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const gameManager = require('./game/gameManager');
+const pokerManager = require('./game/pokerManager');
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -23,6 +24,7 @@ const io     = new Server(server, {
 });
 
 gameManager.init(io);
+pokerManager.init(io);
 
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '16kb' }));
@@ -84,8 +86,18 @@ io.on('connection', async (socket) => {
   socket.on('game:bet',      (bet)        => gameManager.setBet(socket.id, bet));
   socket.on('game:ready',    ()           => gameManager.setReady(socket.id));
   socket.on('game:action',   (action)     => gameManager.playerAction(socket.id, action));
+
+  // ── Poker events ──────────────────────────────────────────────
+  socket.on('poker:create',  (maxPlayers) => pokerManager.createRoom(socket, user, maxPlayers));
+  socket.on('poker:join',    (roomId)     => pokerManager.joinRoom(socket, user, roomId));
+  socket.on('poker:leave',   ()           => pokerManager.leaveRoom(socket.id));
+  socket.on('poker:start',   ()           => pokerManager.startGame(socket.id));
+  socket.on('poker:action',  ({action, amount}) => pokerManager.playerAction(socket.id, action, amount));
+  socket.on('poker:rooms',   ()           => socket.emit('poker:rooms', pokerManager.getRooms()));
+
   socket.on('disconnect',    ()           => {
     gameManager.handleDisconnect(socket.id);
+    pokerManager.leaveRoom(socket.id);
     console.log(`[Socket] ${socket.username} rozłączony`);
   });
 });

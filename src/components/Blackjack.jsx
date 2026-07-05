@@ -209,11 +209,10 @@ export default function Blackjack({ onBack, username }) {
   const [bet, setBet]               = useState(50);
   const [deck, setDeck]             = useState([]);
 
-  // Multi-hand support for split
-  const [hands, setHands]           = useState([[], []]);       // [hand0, hand1]
-  const [handBets, setHandBets]     = useState([0, 0]);
-  const [activeHand, setActiveHand] = useState(0);              // 0 or 1
-  const [isSplit, setIsSplit]       = useState(false);
+  // Multi-hand support for split (dynamic, supports re-split)
+  const [hands, setHands]           = useState([[]]);
+  const [handBets, setHandBets]     = useState([0]);
+  const [activeHand, setActiveHand] = useState(0);
 
   const [dealerHand, setDealerHand] = useState([]);
   const [status, setStatus]         = useState(STATUS.IDLE);
@@ -224,6 +223,9 @@ export default function Blackjack({ onBack, username }) {
 
   // Track session result saved flag
   const sessionSavedRef = useRef(false);
+
+  // Derived split flag – must be defined before any useCallback that uses it
+  const isSplit = hands.length > 1;
 
   const say = useCallback((key) => setSpeech(getPhrase(key)), []);
   const swingArm = useCallback((t) => { setArmAngle(t); setTimeout(() => setArmAngle(0), 380); }, []);
@@ -297,10 +299,9 @@ export default function Blackjack({ onBack, username }) {
     const dealerCards = [d0, d1];
 
     setDeck(newDeck);
-    setHands([playerCards, []]);
-    setHandBets([bet, 0]);
+    setHands([playerCards]);
+    setHandBets([bet]);
     setActiveHand(0);
-    setIsSplit(false);
     setDealerHand(dealerCards);
     setRoundResult(null);
     say("dealing"); setMood("thinking");
@@ -342,10 +343,10 @@ export default function Blackjack({ onBack, username }) {
 
     if (isBust(newHands[activeHand])) {
       // Bust on this hand
-      if (isSplit && activeHand === 0) {
-        // Move to second hand
+      if (activeHand < newHands.length - 1) {
+        // Move to next hand
         say("player_turn");
-        setActiveHand(1);
+        setActiveHand(activeHand + 1);
       } else {
         say("lose"); setMood("happy");
         setBalance((b) => b); // already deducted at deal
@@ -357,10 +358,10 @@ export default function Blackjack({ onBack, username }) {
 
   // ── STAND ─────────────────────────────────────────────────────────
   const stand = useCallback(() => {
-    if (isSplit && activeHand === 0) {
-      // Move to second hand
+    if (activeHand < hands.length - 1) {
+      // Move to next hand
       say("player_turn");
-      setActiveHand(1);
+      setActiveHand(activeHand + 1);
       return;
     }
     // Dealer plays
@@ -435,8 +436,8 @@ export default function Blackjack({ onBack, username }) {
     swingArm(2);
 
     if (isBust(newHands[activeHand])) {
-      if (isSplit && activeHand === 0) {
-        say("player_turn"); setActiveHand(1);
+      if (activeHand < newHands.length - 1) {
+        say("player_turn"); setActiveHand(activeHand + 1);
       } else {
         setRoundResult({ msg: "Przebicie! Przegrywasz!", color: "red", type: "lose" });
         say("lose"); setMood("happy"); setStatus(STATUS.DONE);
@@ -444,8 +445,8 @@ export default function Blackjack({ onBack, username }) {
       return;
     }
     // Auto-stand after double
-    if (isSplit && activeHand === 0) {
-      say("player_turn"); setActiveHand(1);
+    if (activeHand < newHands.length - 1) {
+      say("player_turn"); setActiveHand(activeHand + 1);
     } else {
       // Trigger stand logic inline
       setStatus(STATUS.DEALER_TURN);
@@ -456,9 +457,8 @@ export default function Blackjack({ onBack, username }) {
       setDeck(dk);
       setDealerHand(dc);
       setTimeout(() => {
-        const allHands = isSplit ? newHands : [newHands[0]];
         let totalDelta = 0;
-        allHands.forEach((hand, hi) => {
+        newHands.forEach((hand, hi) => {
           const hBet = newHandBets[hi] || bet;
           const pt = handTotal(hand);
           const dt = handTotal(dc);
@@ -484,20 +484,25 @@ export default function Blackjack({ onBack, username }) {
 
   // ── SPLIT ─────────────────────────────────────────────────────────
   const splitHand = useCallback(() => {
-    if (balance < bet) return;
-    const [c1, c2] = hands[0];
+    const currentBet = handBets[activeHand] ?? bet;
+    if (balance < currentBet) return;
+    const [c1, c2] = hands[activeHand];
     const newDeck = [...deck];
     const n1 = { ...newDeck.pop(), dealDelay: 0.1 };
     const n2 = { ...newDeck.pop(), dealDelay: 0.4 };
+    // Insert two new hands at activeHand position
+    const newHands = [...hands];
+    const newBets = [...handBets];
+    newHands.splice(activeHand, 1, [c1, n1], [c2, n2]);
+    newBets.splice(activeHand, 1, currentBet, currentBet);
     setDeck(newDeck);
-    setHands([[c1, n1], [c2, n2]]);
-    setHandBets([bet, bet]);
-    setBalance((b) => b - bet);
-    setIsSplit(true);
-    setActiveHand(0);
+    setHands(newHands);
+    setHandBets(newBets);
+    setBalance((b) => b - currentBet);
+    // activeHand stays the same (first of the two new hands)
     say("split"); setMood("thinking");
     swingArm(2);
-  }, [hands, deck, bet, balance, say, swingArm]);
+  }, [hands, handBets, deck, bet, balance, activeHand, say, swingArm]);
 
   // ── Reset session ─────────────────────────────────────────────────
   const resetSession = useCallback(() => {
@@ -505,10 +510,9 @@ export default function Blackjack({ onBack, username }) {
     setPeakBalance(SESSION_START);
     setBet(50);
     setDeck([]);
-    setHands([[], []]);
-    setHandBets([0, 0]);
+    setHands([[]]);
+    setHandBets([0]);
     setActiveHand(0);
-    setIsSplit(false);
     setDealerHand([]);
     setStatus(STATUS.IDLE);
     setRoundResult(null);
@@ -518,8 +522,12 @@ export default function Blackjack({ onBack, username }) {
   }, []);
 
   // ── Can split? ────────────────────────────────────────────────────
-  const canSplit = isPlaying && !isSplit && hands[0].length === 2
-    && hands[0][0].rank === hands[0][1].rank && balance >= bet;
+  const currentHandForSplit = hands[activeHand] ?? [];
+  const canSplit = isPlaying
+    && currentHandForSplit.length === 2
+    && currentHandForSplit[0]?.rank === currentHandForSplit[1]?.rank
+    && balance >= (handBets[activeHand] ?? bet)
+    && hands.length < 4; // max 4 hands
 
   const RC = {
     green:  { ring: "#34d399", bg: "rgba(6,78,59,0.85)",  text: "#6ee7b7" },
@@ -669,13 +677,13 @@ export default function Blackjack({ onBack, username }) {
                   className="w-6 h-6 rounded-full border-4 border-yellow-400 bg-yellow-600 flex items-center justify-center text-[9px] font-black text-yellow-100"
                   style={{ boxShadow:"0 2px 8px rgba(0,0,0,0.5)" }}>$</motion.div>
               ))}
-              <span className="ml-1 text-yellow-400 font-black text-xs">${bet}{isSplit ? " x2" : ""}</span>
+              <span className="ml-1 text-yellow-400 font-black text-xs">${bet}{isSplit ? ` x${hands.length}` : ""}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* PLAYER HANDS */}
-        <div className="relative z-10 flex justify-center gap-6 mt-auto mb-1 shrink-0 px-2">
+        <div className="relative z-10 flex justify-center gap-4 mt-auto mb-1 shrink-0 px-2 flex-wrap">
           {isSplit ? (
             hands.map((hand, hi) => (
               <HandArea
@@ -751,6 +759,22 @@ export default function Blackjack({ onBack, username }) {
                     style={bet===b ? { borderColor:"#fbbf24", background:"#d97706", color:"#fef3c7", boxShadow:"0 0 16px rgba(234,179,8,0.6)" }
                       : { borderColor:"#374151", background:"#1f2937", color:"#9ca3af" }}>
                     ${b}
+                  </motion.button>
+                ))}
+              </div>
+              {/* Quick bet shortcuts */}
+              <div className="flex gap-2">
+                {[
+                  { label: '1/3', getValue: () => Math.max(10, Math.floor(balance / 3 / 5) * 5) },
+                  { label: '1/2', getValue: () => Math.max(10, Math.floor(balance / 2 / 5) * 5) },
+                  { label: 'ALL IN', getValue: () => balance },
+                ].map(({ label, getValue }) => (
+                  <motion.button key={label} whileTap={{ scale:0.92 }}
+                    onClick={() => setBet(Math.min(getValue(), balance))}
+                    disabled={balance < 10}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-black transition-all disabled:opacity-30"
+                    style={{ background:"#1f2937", border:"1px solid #374151", color: label==='ALL IN' ? '#f87171' : '#34d399' }}>
+                    {label}
                   </motion.button>
                 ))}
               </div>

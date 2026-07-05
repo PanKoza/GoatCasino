@@ -597,6 +597,22 @@ export default function DuelGame({ onBack, username }) {
                   </motion.button>
                 ))}
               </div>
+              {/* Quick bet shortcuts */}
+              <div className="flex gap-2">
+                {[
+                  { label: '1/3', val: () => Math.max(10, Math.floor(Math.min(playerBal, botBal) / 3 / 5) * 5) },
+                  { label: '1/2', val: () => Math.max(10, Math.floor(Math.min(playerBal, botBal) / 2 / 5) * 5) },
+                  { label: 'ALL IN', val: () => Math.min(playerBal, botBal) },
+                ].map(({ label, val }) => (
+                  <motion.button key={label} whileTap={{ scale:0.92 }}
+                    onClick={() => setBet(Math.min(val(), playerBal, botBal))}
+                    disabled={playerBal < 10 || botBal < 10}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-black transition-all disabled:opacity-30"
+                    style={{ background:'#1f2937', border:'1px solid #374151', color: label==='ALL IN' ? '#f87171' : '#34d399' }}>
+                    {label}
+                  </motion.button>
+                ))}
+              </div>
               <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
                 onClick={deal} disabled={bet > playerBal || bet > botBal}
                 className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed"

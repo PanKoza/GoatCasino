@@ -5,6 +5,10 @@ import DuelGame from './components/DuelGame';
 import OnlineDuel from './components/OnlineDuel';
 import AuthScreen from './components/AuthScreen';
 import Stats from './components/Stats';
+import BlackjackTutorial from './components/BlackjackTutorial';
+import PokerGame from './components/PokerGame';
+import PokerOnline from './components/PokerOnline';
+import PokerTutorial from './components/PokerTutorial';
 import { api, hasToken, clearSession } from './api';
 
 export default function App() {
@@ -32,8 +36,17 @@ export default function App() {
   if (!user) return <AuthScreen onAuth={handleAuth} />;
 
   if (currentGame === 'blackjack') return <Blackjack    onBack={handleBackToLobby} username={user.username} />;
+  if (currentGame === 'blackjack_tutorial') return <BlackjackTutorial onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('blackjack')} />;
+  if (currentGame === 'duel_tutorial')      return <BlackjackTutorial onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('duel')} />;
+  if (currentGame === 'online_tutorial')    return <BlackjackTutorial onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('online')} />;
   if (currentGame === 'duel')      return <DuelGame     onBack={handleBackToLobby} username={user.username} />;
   if (currentGame === 'online')    return <OnlineDuel   onBack={handleBackToLobby} username={user.username} />;
+  if (currentGame === 'poker_1v1')    return <PokerGame mode="1v1"    onBack={handleBackToLobby} />;
+  if (currentGame === 'poker_bots')   return <PokerGame mode="bots"   onBack={handleBackToLobby} />;
+  if (currentGame === 'poker_online') return <PokerOnline              onBack={handleBackToLobby} username={user.username} />;
+  if (currentGame === 'poker_1v1_tutorial')    return <PokerTutorial mode="1v1"    onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('poker_1v1')} />;
+  if (currentGame === 'poker_bots_tutorial')   return <PokerTutorial mode="bots"   onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('poker_bots')} />;
+  if (currentGame === 'poker_online_tutorial') return <PokerTutorial mode="online" onBack={() => setCurrentGame(null)} onPlay={() => setCurrentGame('poker_online')} />;
   if (currentGame === 'stats')     return <Stats        user={user} onBack={() => setCurrentGame(null)} />;
 
   return <Lobby user={user} onSelectGame={setCurrentGame} onLogout={handleLogout} />;

@@ -15,11 +15,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // Stats
+    // Stats – ogólne
     gamesPlayed: { type: Number, default: 0 },
     gamesWon:    { type: Number, default: 0 },
-    totalProfit: { type: Number, default: 0 }, // net $ won across all sessions
-    bestSession: { type: Number, default: 0 }, // highest balance reached in a single session
+    totalProfit: { type: Number, default: 0 },
+    bestSession: { type: Number, default: 0 },
+    // Stats – Blackjack
+    bjPlayed:    { type: Number, default: 0 },
+    bjWon:       { type: Number, default: 0 },
+    bjProfit:    { type: Number, default: 0 },
+    // Stats – Poker
+    pokerPlayed: { type: Number, default: 0 },
+    pokerWon:    { type: Number, default: 0 },
+    pokerProfit: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

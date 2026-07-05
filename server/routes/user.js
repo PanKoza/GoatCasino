@@ -13,23 +13,40 @@ router.get('/me', authMiddleware, async (req, res) => {
     gamesWon: user.gamesWon,
     totalProfit: user.totalProfit,
     bestSession: user.bestSession,
+    bjPlayed: user.bjPlayed ?? 0,
+    bjWon: user.bjWon ?? 0,
+    bjProfit: user.bjProfit ?? 0,
+    pokerPlayed: user.pokerPlayed ?? 0,
+    pokerWon: user.pokerWon ?? 0,
+    pokerProfit: user.pokerProfit ?? 0,
   });
 });
 
 // POST /api/user/game-result — record result after a session ends
 router.post('/game-result', authMiddleware, async (req, res) => {
-  const { won, profit, peakBalance } = req.body;
+  const { won, profit, peakBalance, gameType = 'blackjack' } = req.body;
   if (typeof won !== 'boolean' || typeof profit !== 'number' || typeof peakBalance !== 'number') {
     return res.status(400).json({ error: 'Nieprawidłowe dane wyniku.' });
   }
 
-  const update = {
-    $inc: {
-      gamesPlayed: 1,
-      gamesWon: won ? 1 : 0,
-      totalProfit: profit,
-    },
+  const inc = {
+    gamesPlayed: 1,
+    gamesWon: won ? 1 : 0,
+    totalProfit: profit,
   };
+
+  if (gameType === 'poker') {
+    inc.pokerPlayed = 1;
+    inc.pokerWon = won ? 1 : 0;
+    inc.pokerProfit = profit;
+  } else {
+    // blackjack (default)
+    inc.bjPlayed = 1;
+    inc.bjWon = won ? 1 : 0;
+    inc.bjProfit = profit;
+  }
+
+  const update = { $inc: inc };
 
   const user = await User.findById(req.userId);
   if (!user) return res.status(404).json({ error: 'Użytkownik nie istnieje.' });
@@ -50,6 +67,12 @@ router.post('/game-result', authMiddleware, async (req, res) => {
     gamesWon: updated.gamesWon,
     totalProfit: updated.totalProfit,
     bestSession: updated.bestSession,
+    bjPlayed: updated.bjPlayed ?? 0,
+    bjWon: updated.bjWon ?? 0,
+    bjProfit: updated.bjProfit ?? 0,
+    pokerPlayed: updated.pokerPlayed ?? 0,
+    pokerWon: updated.pokerWon ?? 0,
+    pokerProfit: updated.pokerProfit ?? 0,
   });
 });
 

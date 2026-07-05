@@ -484,6 +484,22 @@ export default function OnlineDuel({ onBack, username }) {
                     </motion.button>
                   ))}
                 </div>
+                {/* Quick bet shortcuts */}
+                <div className="flex gap-2">
+                  {[
+                    { label: '1/3',    val: () => Math.max(10, Math.floor((gs?.me.balance ?? 0) / 3 / 5) * 5) },
+                    { label: '1/2',    val: () => Math.max(10, Math.floor((gs?.me.balance ?? 0) / 2 / 5) * 5) },
+                    { label: 'ALL IN', val: () => gs?.me.balance ?? 0 },
+                  ].map(({ label, val }) => (
+                    <motion.button key={label} whileTap={{ scale:0.92 }}
+                      onClick={() => sendBet(Math.min(val(), gs?.me.balance ?? 0))}
+                      disabled={isReady || (gs?.me.balance ?? 0) < 10}
+                      className="flex-1 py-1.5 rounded-lg text-xs font-black transition-all disabled:opacity-30"
+                      style={{ background:'#1f2937', border:'1px solid #374151', color: label==='ALL IN' ? '#f87171' : '#34d399' }}>
+                      {label}
+                    </motion.button>
+                  ))}
+                </div>
                 <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
                   onClick={sendReady} disabled={isReady}
                   className="w-full py-3 rounded-xl font-black text-sm tracking-widest transition-all disabled:opacity-50"
