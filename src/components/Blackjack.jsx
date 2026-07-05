@@ -96,11 +96,25 @@ function DealerTorso() {
 }
 
 // ── Hand display component ────────────────────────────────────────
-function HandArea({ cards, label, score, bust, active, isDealer, hidden2 }) {
+function HandArea({ cards, label, score, bust, active, isDealer, hidden2, done }) {
   return (
-    <div className={`flex flex-col items-center transition-opacity duration-300 ${!active && !isDealer ? "opacity-50" : ""}`}>
-      <div className={`flex flex-col items-center mb-2`}>
-        <div className={`text-[10px] tracking-widest uppercase font-semibold ${bust ? "text-red-400" : "text-emerald-400/70"}`}>
+    <div className="relative flex flex-col items-center">
+      {/* Active indicator ring – properly contained with relative parent */}
+      {active && !isDealer && (
+        <motion.div
+          animate={{ opacity: [0.4, 0.9, 0.4] }}
+          transition={{ duration: 1.2, repeat: Infinity }}
+          className="absolute -inset-2 rounded-2xl border-2 border-yellow-400 pointer-events-none z-10"
+        />
+      )}
+      {/* Done indicator for inactive split hand */}
+      {done && !isDealer && (
+        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-gray-700 border border-gray-500 flex items-center justify-center z-10">
+          <span className="text-[9px] text-gray-300 font-black">✓</span>
+        </div>
+      )}
+      <div className="flex flex-col items-center mb-2">
+        <div className={`text-[10px] tracking-widest uppercase font-semibold ${bust ? "text-red-400" : active ? "text-yellow-400" : "text-emerald-400/70"}`}>
           {label}
           {active && !isDealer && <span className="ml-1.5 text-yellow-400">◄</span>}
         </div>
@@ -110,20 +124,13 @@ function HandArea({ cards, label, score, bust, active, isDealer, hidden2 }) {
             initial={{ scale: 1.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className={`text-3xl font-black mt-0.5 ${bust ? "text-red-400" : "text-white"}`}
+            className={`text-3xl font-black mt-0.5 ${bust ? "text-red-400" : active ? "text-white" : "text-gray-400"}`}
           >
             {score}{bust ? <span className="text-base ml-1 font-bold">BUST</span> : ""}
           </motion.div>
         )}
       </div>
-      {active && !isDealer && (
-        <motion.div
-          animate={{ scaleX: [1, 1.02, 1] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
-          className="absolute -inset-2 rounded-2xl border-2 border-yellow-400/40 pointer-events-none"
-        />
-      )}
-      <div className="flex gap-2 justify-center flex-wrap min-h-[7rem] relative">
+      <div className={`flex gap-2 justify-center flex-wrap min-h-[7rem] relative transition-opacity duration-200 ${!active && !isDealer && !done ? "opacity-70" : done ? "opacity-60" : ""}`}>
         {cards.map((card, i) => (
           <PlayingCard
             key={`${label}-${i}-${card.rank}${card.suit}`}
@@ -693,6 +700,7 @@ export default function Blackjack({ onBack, username }) {
                 score={hand.length > 0 ? handTotal(hand) : null}
                 bust={isBust(hand)}
                 active={isPlaying && activeHand === hi}
+                done={isPlaying && activeHand > hi}
                 isDealer={false}
                 hidden2={false}
               />

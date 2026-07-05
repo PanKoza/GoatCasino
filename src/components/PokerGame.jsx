@@ -440,21 +440,21 @@ export default function PokerGame({ mode, onBack }) {
       if (state.phase === 'river') {
         return setGs(resolveShowdown(state));
       }
-      // All-in scenario: skip to showdown
+      // All-in scenario: deal remaining streets then showdown without waiting for actions
       const canAct = state.players.filter(p => !p.folded && !p.allIn);
-      if (canAct.length <= 1 && state.phase !== 'preflop') {
-        // Deal remaining community and showdown
-        let ns = state;
-        while (['flop','turn','river'].includes(ns.phase) && ns.community.length < 5) {
-          ns = dealCommunity(ns);
-        }
+      if (canAct.length === 0) {
+        // Nobody can act – deal all remaining community cards immediately
+        let ns = dealCommunity(state);
+        while (ns.community.length < 5) ns = dealCommunity(ns);
         return setGs(resolveShowdown(ns));
       }
-      return setGs(dealCommunity(state));
+      // Normal advance to next street – recurse so all-in check runs again on new street
+      const next = dealCommunity(state);
+      return advanceState(next);
     }
 
     setGs(state);
-  }, []);
+  }, []); // eslint-disable-line
 
   // ── Bot turns ─────────────────────────────────────────────────
   useEffect(() => {

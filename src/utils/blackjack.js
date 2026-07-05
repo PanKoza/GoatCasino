@@ -37,7 +37,10 @@ export function handTotal(hand) {
 }
 
 export function isBlackjack(hand) {
-  return hand.length === 2 && handTotal(hand) === 21;
+  if (hand.length !== 2) return false;
+  const hasAce = hand.some(c => c.rank === 'A');
+  const hasTen = hand.some(c => ['10', 'J', 'Q', 'K'].includes(c.rank));
+  return hasAce && hasTen;
 }
 
 export function isBust(hand) {

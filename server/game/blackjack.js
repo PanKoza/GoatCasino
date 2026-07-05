@@ -30,6 +30,11 @@ function handTotal(hand) {
 }
 
 function isBust(hand)      { return handTotal(hand) > 21; }
-function isBlackjack(hand) { return hand.length === 2 && handTotal(hand) === 21; }
+function isBlackjack(hand) {
+  if (hand.length !== 2) return false;
+  const hasAce = hand.some(c => c.rank === 'A');
+  const hasTen = hand.some(c => ['10', 'J', 'Q', 'K'].includes(c.rank));
+  return hasAce && hasTen;
+}
 
 module.exports = { createDeck, handTotal, isBust, isBlackjack };
