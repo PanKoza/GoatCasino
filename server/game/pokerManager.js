@@ -143,6 +143,7 @@ function createRoom(socket, user, maxPlayers) {
       isDealer: false,
       isSB: false,
       isBB: false,
+      leftGame: false,
     }],
     activeIdx: -1,
     dealerIdx: 0,
@@ -181,9 +182,11 @@ function joinRoom(socket, user, roomId) {
     id: user.id, name: user.username, socketId: socket.id,
     chips: START_CHIPS, hand: [], folded: false, allIn: false,
     currentBet: 0, totalBet: 0, isDealer:false, isSB:false, isBB:false,
+    leftGame: false,
   });
   socketToRoom[socket.id] = roomId;
   socket.join(roomId);
+  socket.emit('poker:joined');
   room.log.push(`${user.username} dołączył.`);
   broadcastRoomList();
   broadcast(room);
@@ -195,7 +198,9 @@ function leaveRoom(socketId) {
   const room = rooms[roomId];
   if (!room) return;
   delete socketToRoom[socketId];
+
   if (!room.started) {
+    // Pre-game: just remove the player
     room.players = room.players.filter(p => p.socketId !== socketId);
     if (room.players.length === 0) {
       delete rooms[roomId];
@@ -205,11 +210,24 @@ function leaveRoom(socketId) {
     }
     broadcastRoomList();
   } else {
-    // Mark as disconnected but keep in game
+    // Mid-game: fold the player immediately and mark for removal on next hand
     const p = room.players.find(p => p.socketId === socketId);
-    if (p) {
-      p.socketId = null;
-      room.log.push(`${p.name} rozłączony.`);
+    if (!p) return;
+    p.socketId = null;
+    p.leftGame = true;
+
+    const wasActive = room.players[room.activeIdx]?.id === p.id;
+
+    if (!p.folded && !room.handOver) {
+      p.folded = true;
+      room.log.push(`${p.name} opuścił grę – automatyczny fold.`);
+    }
+
+    if (wasActive && !room.handOver) {
+      clearActionTimeout(room);
+      advanceRoom(room);
+    } else {
+      broadcast(room);
     }
   }
 }
@@ -441,8 +459,8 @@ function resolveShowdown(room) {
 function scheduleNextHand(room) {
   setTimeout(() => {
     if (!rooms[room.id]) return;
-    // Remove busted players
-    room.players = room.players.filter(p => p.chips > 0);
+    // Remove busted players and players who left
+    room.players = room.players.filter(p => p.chips > 0 && !p.leftGame);
     if (room.players.length < 2) {
       const winner = room.players[0];
       if (winner) {

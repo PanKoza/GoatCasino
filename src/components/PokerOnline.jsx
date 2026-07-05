@@ -204,7 +204,13 @@ export default function PokerOnline({ onBack, username }) {
     socket.on('poker:rooms', setRooms);
     socket.on('poker:created', ({ roomId }) => {
       setCreating(false);
+      savedRef.current = false;
+      prevPhaseRef.current = null;
       setScreen('game');
+    });
+    socket.on('poker:joined', () => {
+      savedRef.current = false;
+      prevPhaseRef.current = null;
     });
     socket.on('poker:state', (state) => {
       setGs(prev => {
@@ -231,6 +237,7 @@ export default function PokerOnline({ onBack, username }) {
     return () => {
       socket.off('poker:rooms');
       socket.off('poker:created');
+      socket.off('poker:joined');
       socket.off('poker:state');
       socket.off('poker:error');
     };
@@ -257,6 +264,8 @@ export default function PokerOnline({ onBack, username }) {
       api.saveGameResult(false, profit, chips, 'poker', -10).catch(() => {});
     }
     socketRef.current?.emit('poker:leave');
+    savedRef.current = false;
+    prevPhaseRef.current = null;
     setScreen('lobby');
     setGs(null);
     socketRef.current?.emit('poker:rooms');
