@@ -308,50 +308,88 @@ export default function PokerOnline({ onBack, username }) {
   const isHost = gs.myIdx === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-green-950 to-gray-950 text-white flex flex-col">
-      <header className="border-b border-green-800/40 bg-black/50 backdrop-blur-sm shrink-0">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={handleLeave} className="text-sm text-gray-400 hover:text-white transition-colors">← Opuść</button>
+    <div className="min-h-screen text-white flex flex-col"
+      style={{ background: 'radial-gradient(ellipse at 50% 30%, #0f2d1a 0%, #060d0a 100%)' }}>
+
+      {/* Header */}
+      <header className="shrink-0 border-b border-emerald-900/40 bg-black/60 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
+          <button onClick={handleLeave}
+            className="text-xs text-gray-500 hover:text-white transition-colors flex items-center gap-1">
+            ← Opuść
+          </button>
           <div className="flex items-center gap-2">
-            <span className="text-xl">♠️</span>
-            <span className="text-emerald-400 font-black text-sm">POKER ONLINE</span>
-            <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">
+            <span className="text-base">♠️</span>
+            <span className="text-emerald-400 font-black tracking-wider text-xs">POKER ONLINE</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              gs.phase === 'preflop' ? 'bg-blue-900/70 text-blue-300 border border-blue-700/50' :
+              gs.phase === 'flop'    ? 'bg-emerald-900/70 text-emerald-300 border border-emerald-700/50' :
+              gs.phase === 'turn'    ? 'bg-yellow-900/70 text-yellow-300 border border-yellow-700/50' :
+              gs.phase === 'river'   ? 'bg-orange-900/70 text-orange-300 border border-orange-700/50' :
+              gs.phase === 'showdown'? 'bg-purple-900/70 text-purple-300 border border-purple-700/50' :
+              'bg-gray-800 text-gray-400 border border-gray-700/50'
+            }`}>
               {PHASE_LABEL[gs.phase] ?? gs.phase}
             </span>
           </div>
           <div className="text-right">
-            <div className="text-xs text-gray-500">Żetony</div>
+            <div className="text-[10px] text-gray-500">Twoje żetony</div>
             <div className="text-sm font-black text-yellow-400">${me?.chips ?? 0}</div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-3 py-4 gap-4">
+      <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-3 py-3 gap-3 overflow-hidden">
 
-        {/* Opponents */}
-        <div className="flex justify-center gap-6 flex-wrap">
-          {opponents.map((p, i) => (
-            <Seat key={p.id} player={p} isMe={false}
+        {/* ── Opponents row ──────────────────────────────────────────── */}
+        <div className="flex justify-center items-end gap-5 flex-wrap min-h-[130px] px-2">
+          {opponents.map(p => (
+            <OpponentSeat
+              key={p.id}
+              player={p}
               isActive={gs.players.indexOf(p) === gs.activeIdx}
-              community={gs.community} phase={gs.phase} dealKey={dealKey} />
+              dealKey={dealKey}
+            />
           ))}
+          {opponents.length === 0 && (
+            <div className="text-gray-700 text-xs self-center">Brak przeciwników</div>
+          )}
         </div>
 
-        {/* Felt */}
-        <div className="relative rounded-3xl flex flex-col items-center justify-center gap-3 py-6 px-4"
-          style={{ background:'radial-gradient(ellipse at 50% 50%, #1e5c3a 0%, #0d3322 100%)', border:'4px solid #0a2918', boxShadow:'inset 0 4px 40px rgba(0,0,0,0.5), 0 0 0 2px #c9a84c44' }}>
+        {/* ── Poker table (oval felt) ────────────────────────────────── */}
+        <div className="relative flex flex-col items-center justify-center py-8 px-6 gap-4"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 50%, #1e6040 0%, #0e3a24 60%, #082014 100%)',
+            border: '6px solid #8b6914',
+            borderRadius: '50% / 40%',
+            boxShadow: [
+              'inset 0 6px 40px rgba(0,0,0,0.6)',
+              'inset 0 -4px 20px rgba(255,255,255,0.03)',
+              '0 0 0 2px #c9a84c55',
+              '0 8px 40px rgba(0,0,0,0.8)',
+            ].join(', '),
+          }}>
 
-          {gs.pot > 0 && (
-            <motion.div key={gs.pot} initial={{ scale:1.2 }} animate={{ scale:1 }}
-              className="absolute top-3 right-3 bg-black/50 border border-yellow-700/50 px-3 py-1 rounded-full text-yellow-400 font-black text-sm">
-              POT: ${gs.pot}
-            </motion.div>
-          )}
+          {/* Pot */}
+          <AnimatePresence mode="wait">
+            {gs.pot > 0 && (
+              <motion.div
+                key={gs.pot}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.85, opacity: 0 }}
+                className="flex items-center gap-2 bg-black/60 border border-yellow-700/60 px-4 py-1.5 rounded-full shadow-lg backdrop-blur-sm"
+              >
+                <span className="text-yellow-500 text-sm">🪙</span>
+                <span className="text-yellow-400 font-black text-sm tracking-wide">POT: ${gs.pot}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Community cards */}
-          <div className="flex gap-3 justify-center min-h-[112px] items-center">
+          <div className="flex gap-2.5 justify-center items-center min-h-[116px]">
             {gs.phase === 'lobby' ? (
-              <div className="text-gray-500 text-sm font-semibold tracking-widest">STÓŁ</div>
+              <div className="text-emerald-800 text-sm font-bold tracking-[0.3em] uppercase select-none">Texas Hold'em</div>
             ) : (
               Array.from({ length: 5 }).map((_, i) => (
                 gs.community[i]
@@ -359,118 +397,138 @@ export default function PokerOnline({ onBack, username }) {
                       key={`comm-${dealKey}-${i}`}
                       card={gs.community[i]}
                       fromDeck
-                      dealDelay={i * 0.12}
+                      dealDelay={i * 0.13}
                     />
-                  : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-700/30" />
+                  : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-800/40" />
               ))
             )}
           </div>
 
-          {gs.log?.length > 0 && (
-            <div className="text-[10px] text-gray-400 text-center max-w-xs">{gs.log[gs.log.length-1]}</div>
+          {/* Last log line */}
+          {gs.log?.length > 0 && gs.phase !== 'lobby' && (
+            <div className="text-[10px] text-emerald-400/70 text-center max-w-[260px] font-medium">
+              {gs.log[gs.log.length - 1]}
+            </div>
           )}
         </div>
 
-        {/* My seat */}
+        {/* ── My hand ───────────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-2">
           {me && (
-            <Seat player={me} isMe={true} isActive={isMyTurn} community={gs.community} phase={gs.phase} dealKey={dealKey} />
+            <MySeat player={me} isActive={isMyTurn} community={gs.community} dealKey={dealKey} />
           )}
 
           {/* Winner banner */}
           <AnimatePresence>
             {gs.winners?.length > 0 && gs.phase === 'showdown' && (
-              <motion.div initial={{ scale:0.8,opacity:0 }} animate={{ scale:1,opacity:1 }} exit={{ scale:0.8,opacity:0 }}
-                className={`text-center rounded-2xl px-6 py-3 border font-black ${
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0, y: 8 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className={`text-center rounded-2xl px-8 py-3 border-2 font-black text-sm shadow-xl ${
                   gs.winners.includes(me?.id)
-                    ? 'bg-emerald-900/80 border-emerald-500 text-emerald-300'
-                    : 'bg-red-900/60 border-red-700 text-red-300'
+                    ? 'bg-emerald-900/90 border-emerald-400 text-emerald-200 shadow-emerald-900/50'
+                    : 'bg-red-950/90 border-red-700 text-red-300 shadow-red-950/50'
                 }`}>
-                {gs.winners.includes(me?.id) ? '🏆 Wygrywasz tę rękę!' : `😞 ${gs.players.find(p=>gs.winners.includes(p.id))?.name} wygrywa`}
+                {gs.winners.includes(me?.id)
+                  ? '🏆 Wygrywasz tę rękę!'
+                  : `😞 ${gs.players.find(p => gs.winners.includes(p.id))?.name ?? '?'} wygrywa`}
               </motion.div>
             )}
           </AnimatePresence>
 
           {gs.phase === 'game_over' && (
-            <div className="text-center">
-              <div className="text-xl font-black text-yellow-400 mb-2">Gra zakończona!</div>
-              <button onClick={handleLeave} className="px-6 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl font-bold transition-colors">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2">
+              <div className="text-xl font-black text-yellow-400">Gra zakończona!</div>
+              <button onClick={handleLeave}
+                className="px-8 py-2.5 bg-emerald-700 hover:bg-emerald-600 rounded-xl font-black text-sm transition-colors shadow-lg">
                 Wróć do lobby
               </button>
-            </div>
+            </motion.div>
           )}
         </div>
 
-        {/* Controls */}
-        <div className="shrink-0 bg-gray-950 border-t border-gray-800 rounded-2xl p-3">
+        {/* ── Action bar ────────────────────────────────────────────── */}
+        <div className="shrink-0 rounded-2xl border border-gray-800/80 bg-gray-950/90 backdrop-blur-sm p-3">
           <AnimatePresence mode="wait">
-            {/* Lobby waiting */}
+
+            {/* Lobby – waiting to start */}
             {gs.phase === 'lobby' && (
-              <motion.div key="lobby" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} className="space-y-3">
-                <div className="text-center text-sm text-gray-400">
-                  Gracze: {gs.players.length} / {/* maxPlayers not in state, host knows */}
-                  <span className="text-emerald-400 font-bold">{gs.players.map(p=>p.name).join(', ')}</span>
+              <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                <div className="text-center text-xs text-gray-400">
+                  Gracze:{' '}
+                  <span className="text-emerald-400 font-bold">{gs.players.map(p => p.name).join(', ')}</span>
                 </div>
                 {isHost ? (
                   <button onClick={handleStart} disabled={gs.players.length < 2}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-black text-sm transition-colors disabled:opacity-40">
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 hover:from-emerald-600 hover:to-emerald-500 font-black text-sm transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed">
                     🃏 ROZPOCZNIJ GRĘ ({gs.players.length} graczy)
                   </button>
                 ) : (
-                  <div className="text-center text-gray-500 text-sm py-2">Czekam aż host rozpocznie grę...</div>
+                  <div className="text-center text-gray-500 text-xs py-2 animate-pulse">
+                    ⏳ Czekam aż host rozpocznie grę...
+                  </div>
                 )}
               </motion.div>
             )}
 
             {/* My turn */}
             {isMyTurn && (
-              <motion.div key="actions" initial={{ opacity:0,y:10 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} className="space-y-2">
+              <motion.div key="actions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2.5">
+                {/* Raise slider */}
                 <AnimatePresence>
                   {showRaise && (
-                    <motion.div initial={{ height:0,opacity:0 }} animate={{ height:'auto',opacity:1 }} exit={{ height:0,opacity:0 }} className="overflow-hidden">
-                      <div className="flex items-center gap-2 pb-2">
-                        <span className="text-xs text-gray-400 w-16">Podbicie:</span>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="flex items-center gap-3 pb-2 px-1">
+                        <span className="text-[10px] text-gray-400 whitespace-nowrap">Podbicie:</span>
                         <input type="range" min={gs.minRaise} max={me?.chips ?? gs.minRaise} step={25}
                           value={raiseInput} onChange={e => setRaiseInput(+e.target.value)}
-                          className="flex-1 accent-emerald-500" />
-                        <span className="text-yellow-400 font-black text-sm w-16 text-right">${raiseInput}</span>
+                          className="flex-1 accent-emerald-500 h-1.5" />
+                        <span className="text-yellow-400 font-black text-sm min-w-[52px] text-right">${raiseInput}</span>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Action buttons */}
                 <div className="flex gap-2">
                   <button onClick={() => sendAction('fold')}
-                    className="flex-1 py-3 rounded-xl bg-red-900/60 hover:bg-red-800/80 border border-red-700/50 font-bold text-red-300 text-sm transition-colors">
+                    className="flex-1 py-3.5 rounded-xl bg-red-950 hover:bg-red-900 border border-red-800/60 font-black text-red-300 text-sm transition-all shadow active:scale-95">
                     ✕ Fold
                   </button>
                   {toCall === 0 ? (
                     <button onClick={() => sendAction('check')}
-                      className="flex-1 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-600 font-bold text-gray-200 text-sm transition-colors">
+                      className="flex-1 py-3.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-600/60 font-black text-gray-100 text-sm transition-all shadow active:scale-95">
                       ✓ Check
                     </button>
                   ) : (
                     <button onClick={() => sendAction('call')}
-                      className="flex-1 py-3 rounded-xl bg-blue-900/70 hover:bg-blue-800/80 border border-blue-700/50 font-bold text-blue-300 text-sm transition-colors">
-                      📞 Call ${toCall}
+                      className="flex-1 py-3.5 rounded-xl bg-blue-950 hover:bg-blue-900 border border-blue-700/60 font-black text-blue-200 text-sm transition-all shadow active:scale-95">
+                      📞 Call <span className="text-blue-400">${toCall}</span>
                     </button>
                   )}
                   <button
-                    onClick={() => { if (showRaise) sendAction('raise', raiseInput); else { setRaiseInput(Math.min(gs.minRaise*2, me?.chips??gs.minRaise)); setShowRaise(true); } }}
+                    onClick={() => {
+                      if (showRaise) sendAction('raise', raiseInput);
+                      else { setRaiseInput(Math.min(gs.minRaise * 2, me?.chips ?? gs.minRaise)); setShowRaise(true); }
+                    }}
                     disabled={me?.chips <= toCall}
-                    className="flex-1 py-3 rounded-xl bg-emerald-800/70 hover:bg-emerald-700/80 border border-emerald-600/50 font-bold text-emerald-300 text-sm transition-colors disabled:opacity-40">
+                    className="flex-1 py-3.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/60 font-black text-emerald-300 text-sm transition-all shadow active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                     {showRaise ? '⚡ Potwierdź' : '⬆ Raise'}
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Waiting for others */}
+            {/* Waiting for opponent */}
             {!isMyTurn && gs.phase !== 'lobby' && gs.phase !== 'showdown' && gs.phase !== 'game_over' && (
-              <motion.div key="wait" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-                className="text-center py-3 text-gray-500 text-sm">
-                {gs.players[gs.activeIdx]?.name ?? '...'} myśli...
+              <motion.div key="wait" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex items-center justify-center gap-2 py-3 text-gray-500 text-sm">
+                <span className="animate-spin text-base">⟳</span>
+                <span>{gs.players[gs.activeIdx]?.name ?? '...'} myśli...</span>
               </motion.div>
             )}
+
           </AnimatePresence>
         </div>
       </main>
