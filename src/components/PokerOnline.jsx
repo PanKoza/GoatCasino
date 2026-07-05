@@ -3,50 +3,83 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getSocket, disconnectSocket } from '../socket';
 import { api } from '../api';
 import { suitColor, evaluateHand } from '../utils/poker';
+import PlayingCard from './PlayingCard';
 
 const BIG_BLIND = 50;
 const PHASE_LABEL = { preflop:'Pre-flop', flop:'Flop', turn:'Turn', river:'River', showdown:'Showdown', lobby:'Lobby', game_over:'Koniec gry' };
 
-// ── Card ──────────────────────────────────────────────────────────
-function Card({ card, small }) {
-  const sz = small ? 'w-8 h-11 text-xs' : 'w-10 h-14 text-sm';
-  if (!card) return <div className={`${sz} rounded-lg bg-emerald-800 border-2 border-emerald-600 flex items-center justify-center text-emerald-500 font-black shadow`}>🂠</div>;
+// ── Hidden card (opponent) ────────────────────────────────────────
+function HiddenCard({ dealDelay = 0 }) {
   return (
-    <div className={`${sz} rounded-lg bg-white border border-gray-200 flex flex-col items-center justify-center shadow font-black leading-tight`}
-      style={{ color: suitColor(card.suit) }}>
-      <span>{card.rank}</span>
-      <span>{card.suit}</span>
-    </div>
+    <motion.div
+      initial={{ x: 200, y: -120, rotate: 20, opacity: 0, scale: 0.7 }}
+      animate={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }}
+      transition={{ delay: dealDelay, duration: 0.45, type: 'spring', stiffness: 200, damping: 22 }}
+      className="w-12 h-16 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-950 border-2 border-emerald-500 flex items-center justify-center shadow-lg"
+    >
+      <span className="text-emerald-300 text-xl select-none">🂠</span>
+    </motion.div>
   );
 }
 
 // ── Player seat ───────────────────────────────────────────────────
-function Seat({ player, isMe, isActive, community, phase }) {
+function Seat({ player, isMe, isActive, community, phase, dealKey }) {
   const handEv = isMe && player.hand?.filter(Boolean).length === 2 && community.length >= 3
     ? evaluateHand([...player.hand, ...community])
     : null;
+
+  const cardScale = isMe ? 1 : 0.75;
+
   return (
-    <div className={`flex flex-col items-center gap-1 transition-opacity ${player.folded ? 'opacity-30' : ''}`}>
-      <div className={`relative rounded-2xl p-2 border transition-all ${
-        isActive && !player.folded ? 'border-yellow-400 shadow-lg shadow-yellow-400/30 bg-yellow-900/20' : 'border-gray-700/50 bg-gray-900/40'
-      }`}>
-        <div className="flex gap-1 justify-center">
-          {[0,1].map(i => <Card key={i} card={player.hand?.[i] || null} small={!isMe} />)}
-        </div>
-        <div className="absolute -top-2 -right-2 flex gap-0.5">
-          {player.isDealer && <span className="text-[9px] bg-white text-gray-900 font-black rounded-full w-4 h-4 flex items-center justify-center">D</span>}
-          {player.isSB && <span className="text-[9px] bg-blue-500 text-white font-black rounded-full w-4 h-4 flex items-center justify-center">S</span>}
-          {player.isBB && <span className="text-[9px] bg-orange-500 text-white font-black rounded-full w-4 h-4 flex items-center justify-center">B</span>}
-        </div>
-        {player.allIn && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded-full whitespace-nowrap">ALL-IN</div>}
-      </div>
+    <div className={`flex flex-col items-center gap-2 transition-opacity duration-300 ${player.folded ? 'opacity-25' : ''}`}>
+      {/* Name + chips */}
       <div className="text-center">
-        <div className={`text-xs font-bold truncate max-w-[80px] ${isMe ? 'text-emerald-400' : 'text-gray-300'}`}>{player.name}{isMe ? ' (Ty)' : ''}</div>
+        <div className={`text-xs font-bold truncate max-w-[100px] ${isMe ? 'text-emerald-400' : 'text-gray-300'}`}>
+          {player.name}{isMe ? ' (Ty)' : ''}
+        </div>
         <div className="text-xs text-yellow-400 font-black">${player.chips}</div>
         {player.currentBet > 0 && <div className="text-[10px] text-blue-300">Bet: ${player.currentBet}</div>}
       </div>
+
+      {/* Cards */}
+      <div className={`relative rounded-2xl p-2 border-2 transition-all ${
+        isActive && !player.folded
+          ? 'border-yellow-400 shadow-xl shadow-yellow-400/40 bg-yellow-900/20'
+          : 'border-gray-700/40 bg-gray-900/30'
+      }`}>
+        <div className="flex gap-1.5 justify-center" style={{ transform: `scale(${cardScale})`, transformOrigin: 'top center' }}>
+          {isMe ? (
+            player.hand?.map((card, i) =>
+              card
+                ? <PlayingCard key={`${dealKey}-${i}`} card={card} fromDeck dealDelay={i * 0.18} />
+                : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-700/30" />
+            )
+          ) : (
+            [0, 1].map(i =>
+              player.hand?.[i]
+                ? <PlayingCard key={`${dealKey}-${i}`} card={player.hand[i]} fromDeck dealDelay={i * 0.18} />
+                : <HiddenCard key={`${dealKey}-h${i}`} dealDelay={i * 0.18} />
+            )
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="absolute -top-2.5 -right-2.5 flex gap-0.5">
+          {player.isDealer && <span className="text-[9px] bg-white text-gray-900 font-black rounded-full w-5 h-5 flex items-center justify-center shadow">D</span>}
+          {player.isSB && <span className="text-[9px] bg-blue-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow">S</span>}
+          {player.isBB && <span className="text-[9px] bg-orange-500 text-white font-black rounded-full w-5 h-5 flex items-center justify-center shadow">B</span>}
+        </div>
+        {player.allIn && (
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] bg-red-600 text-white font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow">
+            ALL-IN
+          </div>
+        )}
+      </div>
+
       {handEv && !player.folded && (
-        <div className="text-[9px] text-purple-300 font-bold bg-purple-900/40 px-1.5 py-0.5 rounded-full">{handEv.name}</div>
+        <div className="text-[10px] text-purple-200 font-bold bg-purple-800/50 border border-purple-600/40 px-2 py-0.5 rounded-full shadow">
+          {handEv.name}
+        </div>
       )}
     </div>
   );
@@ -114,8 +147,10 @@ export default function PokerOnline({ onBack, username }) {
   const [error, setError]       = useState('');
   const [raiseInput, setRaiseInput] = useState(BIG_BLIND * 2);
   const [showRaise, setShowRaise]   = useState(false);
+  const [dealKey, setDealKey]       = useState(0);
   const socketRef = useRef(null);
   const savedRef  = useRef(false);
+  const prevPhaseRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('gc_token');
@@ -140,6 +175,11 @@ export default function PokerOnline({ onBack, username }) {
           const rankBonus = won ? 60 : -10;
           api.saveGameResult(won, profit, me?.chips ?? 0, 'poker', rankBonus).catch(() => {});
         }
+        // Increment dealKey on new hand (lobby→preflop transition)
+        if (state.phase === 'preflop' && prevPhaseRef.current === 'lobby') {
+          setDealKey(k => k + 1);
+        }
+        prevPhaseRef.current = state.phase;
         return state;
       });
       if (screen !== 'game') setScreen('game');
@@ -247,11 +287,11 @@ export default function PokerOnline({ onBack, username }) {
       <main className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-3 py-4 gap-4">
 
         {/* Opponents */}
-        <div className="flex justify-center gap-4 flex-wrap">
+        <div className="flex justify-center gap-6 flex-wrap">
           {opponents.map((p, i) => (
             <Seat key={p.id} player={p} isMe={false}
               isActive={gs.players.indexOf(p) === gs.activeIdx}
-              community={gs.community} phase={gs.phase} />
+              community={gs.community} phase={gs.phase} dealKey={dealKey} />
           ))}
         </div>
 
@@ -267,16 +307,19 @@ export default function PokerOnline({ onBack, username }) {
           )}
 
           {/* Community cards */}
-          <div className="flex gap-2 justify-center min-h-[56px] items-center">
+          <div className="flex gap-3 justify-center min-h-[112px] items-center">
             {gs.phase === 'lobby' ? (
               <div className="text-gray-500 text-sm font-semibold tracking-widest">STÓŁ</div>
             ) : (
-              Array.from({ length:5 }).map((_,i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 gs.community[i]
-                  ? <motion.div key={i} initial={{ rotateY:90,opacity:0 }} animate={{ rotateY:0,opacity:1 }} transition={{ delay:i*0.1 }}>
-                      <Card card={gs.community[i]} />
-                    </motion.div>
-                  : <div key={i} className="w-10 h-14 rounded-lg border-2 border-dashed border-emerald-700/30" />
+                  ? <PlayingCard
+                      key={`comm-${dealKey}-${i}`}
+                      card={gs.community[i]}
+                      fromDeck
+                      dealDelay={i * 0.12}
+                    />
+                  : <div key={i} className="w-20 h-28 rounded-xl border-2 border-dashed border-emerald-700/30" />
               ))
             )}
           </div>
@@ -289,7 +332,7 @@ export default function PokerOnline({ onBack, username }) {
         {/* My seat */}
         <div className="flex flex-col items-center gap-2">
           {me && (
-            <Seat player={me} isMe={true} isActive={isMyTurn} community={gs.community} phase={gs.phase} />
+            <Seat player={me} isMe={true} isActive={isMyTurn} community={gs.community} phase={gs.phase} dealKey={dealKey} />
           )}
 
           {/* Winner banner */}
