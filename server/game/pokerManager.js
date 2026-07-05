@@ -275,14 +275,16 @@ function dealHand(room) {
   room.players[sbIdx].currentBet = sb;
   room.players[sbIdx].totalBet = sb;
   room.pot += sb;
+  if (room.players[sbIdx].chips === 0) room.players[sbIdx].allIn = true;
 
   const bb = Math.min(BIG_BLIND, room.players[bbIdx].chips);
   room.players[bbIdx].chips -= bb;
   room.players[bbIdx].currentBet = bb;
   room.players[bbIdx].totalBet = bb;
   room.pot += bb;
+  if (room.players[bbIdx].chips === 0) room.players[bbIdx].allIn = true;
 
-  room.currentBet = BIG_BLIND;
+  room.currentBet = bb; // actual BB posted (may be < BIG_BLIND if player is short-stacked)
   room.minRaise = BIG_BLIND;
   room.raiseCount = 0;
   room.lastAggressorIdx = bbIdx;
@@ -299,7 +301,7 @@ function dealHand(room) {
   room.activeIdx = firstIdx;
 
   broadcast(room);
-  scheduleActionTimeout(room);
+  if (room.activeIdx >= 0) scheduleActionTimeout(room);
 }
 
 // ── Action ────────────────────────────────────────────────────────
@@ -384,12 +386,12 @@ function advanceRoom(room) {
     if (room.phase === 'river') {
       return resolveShowdown(room);
     }
-    // All-in skip
+    // All-in: clear any pending timer and run out the board automatically
     if (canAct.length <= 1) {
-      let temp = room;
-      while (['preflop','flop','turn'].includes(temp.phase)) {
-        advanceStreet(temp);
-        if (temp.community.length >= 5) break;
+      clearActionTimeout(room);
+      while (['preflop','flop','turn'].includes(room.phase)) {
+        advanceStreet(room, true); // skipTimer=true – no timeouts during all-in runout
+        if (room.community.length >= 5) break;
       }
       return resolveShowdown(room);
     }
@@ -401,7 +403,7 @@ function advanceRoom(room) {
   scheduleActionTimeout(room);
 }
 
-function advanceStreet(room) {
+function advanceStreet(room, skipTimer = false) {
   const deck = room.deck;
   if (room.phase === 'preflop') {
     deck.pop();
@@ -437,7 +439,7 @@ function advanceStreet(room) {
   room.activeIdx = room.players[firstIdx].folded || room.players[firstIdx].allIn ? -1 : firstIdx;
 
   broadcast(room);
-  if (room.activeIdx >= 0) scheduleActionTimeout(room);
+  if (!skipTimer && room.activeIdx >= 0) scheduleActionTimeout(room);
 }
 
 function resolveShowdown(room) {
@@ -461,13 +463,20 @@ function scheduleNextHand(room) {
     if (!rooms[room.id]) return;
     // Remove busted players and players who left
     room.players = room.players.filter(p => p.chips > 0 && !p.leftGame);
+    if (room.players.length === 0) {
+      // Everyone left – clean up the room
+      clearActionTimeout(room);
+      delete rooms[room.id];
+      broadcastRoomList();
+      return;
+    }
     if (room.players.length < 2) {
       const winner = room.players[0];
-      if (winner) {
-        room.log.push(`${winner.name} wygrywa grę!`);
-        room.phase = 'game_over';
-      }
+      room.log.push(`${winner.name} wygrywa grę!`);
+      room.phase = 'game_over';
       broadcast(room);
+      // Clean up after a short delay so clients can show game_over screen
+      setTimeout(() => { delete rooms[room.id]; broadcastRoomList(); }, 15000);
       return;
     }
     room.dealerIdx = (room.dealerIdx + 1) % room.players.length;
@@ -477,7 +486,9 @@ function scheduleNextHand(room) {
 
 // ── Action timeout (auto-fold) ─────────────────────────────────────
 function scheduleActionTimeout(room) {
+  clearActionTimeout(room); // always clear before scheduling to prevent stale timers
   room.actionTimer = setTimeout(() => {
+    if (room.handOver) return; // hand already resolved – do nothing
     const active = room.players[room.activeIdx];
     if (!active) return;
     room.log.push(`${active.name} przekroczył czas – automatyczny fold.`);

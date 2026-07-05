@@ -27,7 +27,6 @@ function HiddenCard({ dealDelay = 0, small = false }) {
 
 // ── Opponent seat (compact, shown above the table) ────────────────
 function OpponentSeat({ player, isActive, dealKey }) {
-  const hasCards = player.hand?.some(Boolean);
   return (
     <motion.div
       animate={isActive && !player.folded ? { y: [0, -4, 0] } : {}}
@@ -223,9 +222,19 @@ export default function PokerOnline({ onBack, username }) {
           const rankBonus = won ? 60 : -10;
           api.saveGameResult(won, profit, me?.chips ?? 0, 'poker', rankBonus).catch(() => {});
         }
-        // Increment dealKey on new hand (lobby→preflop transition)
-        if (state.phase === 'preflop' && prevPhaseRef.current === 'lobby') {
+        // New hand starts (any non-preflop → preflop transition)
+        if (state.phase === 'preflop' && prevPhaseRef.current !== 'preflop') {
           setDealKey(k => k + 1);
+          setShowRaise(false);
+          setRaiseInput(state.minRaise * 2 || BIG_BLIND * 2);
+        }
+        // It's my turn: close stale raise panel if minRaise changed
+        const myIdx = state.myIdx;
+        const isMeTurn = state.activeIdx === myIdx;
+        const wasMeTurn = prev ? prev.activeIdx === myIdx : false;
+        if (isMeTurn && !wasMeTurn) {
+          setShowRaise(false);
+          setRaiseInput(Math.max(state.minRaise ?? BIG_BLIND, BIG_BLIND * 2));
         }
         prevPhaseRef.current = state.phase;
         return state;
