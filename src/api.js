@@ -30,10 +30,10 @@ export const api = {
 
   me: () => request('/user/me'),
 
-  saveGameResult: (won, profit, peakBalance, gameType = 'blackjack') =>
+  saveGameResult: (won, profit, peakBalance, gameType = 'blackjack', rankBonus = 0) =>
     request('/user/game-result', {
       method: 'POST',
-      body: JSON.stringify({ won, profit, peakBalance, gameType }),
+      body: JSON.stringify({ won, profit, peakBalance, gameType, rankBonus }),
     }),
 
   leaderboard: () => request('/user/leaderboard'),

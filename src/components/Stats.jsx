@@ -61,6 +61,7 @@ export default function Stats({ user, onBack }) {
     gamesWon = 0,
     totalProfit = 0,
     bestSession = 0,
+    rankBonus = 0,
     bjPlayed = 0,
     bjWon = 0,
     bjProfit = 0,
@@ -73,7 +74,7 @@ export default function Stats({ user, onBack }) {
   const winRate    = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
   const avgProfit  = gamesPlayed > 0 ? Math.round(totalProfit / gamesPlayed) : 0;
   const rankScore  = gamesPlayed > 0
-    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50)
+    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50 + rankBonus)
     : 0;
 
   const tier =

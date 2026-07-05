@@ -22,12 +22,18 @@ const PHASE = {
 };
 
 const DIFFICULTIES = [
-  { id: 'easy',   label: 'Łatwy',   icon: '🐣', color: '#22c55e', desc: 'Bot gra losowo – idealny dla początkujących' },
-  { id: 'medium', label: 'Średni',  icon: '🦊', color: '#f59e0b', desc: 'Podstawowa strategia – dobry wyzwanie' },
-  { id: 'hard',   label: 'Trudny',  icon: '🦈', color: '#ef4444', desc: 'Pełna basic strategy – prawie nie do pokonania' },
+  { id: 'easy',   label: 'Łatwy',   icon: '🐣', color: '#22c55e', desc: 'Bot gra losowo – idealny dla początkujących. Bonus za wygraną: +50 pkt' },
+  { id: 'medium', label: 'Średni',  icon: '🦊', color: '#f59e0b', desc: 'Podstawowa strategia – dobre wyzwanie. Bonus za wygraną: +200 pkt' },
+  { id: 'hard',   label: 'Trudny',  icon: '🦈', color: '#ef4444', desc: 'Pełna basic strategy – prawie nie do pokonania. Bonus za wygraną: +500 pkt' },
 ];
 
 const BOT_NAMES = { easy: 'GoatBot Jr.', medium: 'GoatBot Pro', hard: 'GoatBot Shark' };
+
+const DIFFICULTY_RANK_BONUS = {
+  easy:    50,  // małe wsparcie dla początkujących
+  medium: 200,  // solidna nagroda
+  hard:   500,  // duża nagroda za trudne wyzwanie
+};
 
 function SmallCard({ card, hidden }) {
   const isRed = card?.suit === '♥' || card?.suit === '♦';
@@ -249,7 +255,8 @@ export default function DuelGame({ onBack, username }) {
     if ((phase === PHASE.DUEL_WIN || phase === PHASE.DUEL_LOSE) && !savedRef.current) {
       savedRef.current = true;
       const won = phase === PHASE.DUEL_WIN;
-      api.saveGameResult(won, playerBal - SESSION_START, playerBal).catch(() => {});
+      const bonus = won ? (DIFFICULTY_RANK_BONUS[difficulty] ?? 0) : 0;
+      api.saveGameResult(won, playerBal - SESSION_START, playerBal, 'blackjack', bonus).catch(() => {});
     }
   }, [phase]); // eslint-disable-line
 

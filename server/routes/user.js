@@ -13,6 +13,7 @@ router.get('/me', authMiddleware, async (req, res) => {
     gamesWon: user.gamesWon,
     totalProfit: user.totalProfit,
     bestSession: user.bestSession,
+    rankBonus: user.rankBonus ?? 0,
     bjPlayed: user.bjPlayed ?? 0,
     bjWon: user.bjWon ?? 0,
     bjProfit: user.bjProfit ?? 0,
@@ -24,7 +25,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 // POST /api/user/game-result — record result after a session ends
 router.post('/game-result', authMiddleware, async (req, res) => {
-  const { won, profit, peakBalance, gameType = 'blackjack' } = req.body;
+  const { won, profit, peakBalance, gameType = 'blackjack', rankBonus = 0 } = req.body;
   if (typeof won !== 'boolean' || typeof profit !== 'number' || typeof peakBalance !== 'number') {
     return res.status(400).json({ error: 'Nieprawidłowe dane wyniku.' });
   }
@@ -33,6 +34,7 @@ router.post('/game-result', authMiddleware, async (req, res) => {
     gamesPlayed: 1,
     gamesWon: won ? 1 : 0,
     totalProfit: profit,
+    rankBonus: typeof rankBonus === 'number' ? Math.max(0, rankBonus) : 0,
   };
 
   if (gameType === 'poker') {
@@ -67,6 +69,7 @@ router.post('/game-result', authMiddleware, async (req, res) => {
     gamesWon: updated.gamesWon,
     totalProfit: updated.totalProfit,
     bestSession: updated.bestSession,
+    rankBonus: updated.rankBonus ?? 0,
     bjPlayed: updated.bjPlayed ?? 0,
     bjWon: updated.bjWon ?? 0,
     bjProfit: updated.bjProfit ?? 0,

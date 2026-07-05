@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
     gamesWon:    { type: Number, default: 0 },
     totalProfit: { type: Number, default: 0 },
     bestSession: { type: Number, default: 0 },
+    rankBonus:   { type: Number, default: 0 }, // bonus points from difficulty
     // Stats – Blackjack
     bjPlayed:    { type: Number, default: 0 },
     bjWon:       { type: Number, default: 0 },
@@ -36,7 +37,7 @@ const userSchema = new mongoose.Schema(
 userSchema.virtual('rankScore').get(function () {
   if (this.gamesPlayed === 0) return 0;
   const winRate = this.gamesWon / this.gamesPlayed;
-  return Math.round(winRate * 1000 + this.totalProfit * 0.1 + this.gamesWon * 50);
+  return Math.round(winRate * 1000 + this.totalProfit * 0.1 + this.gamesWon * 50 + (this.rankBonus ?? 0));
 });
 
 module.exports = mongoose.model('User', userSchema);

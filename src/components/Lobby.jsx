@@ -4,9 +4,9 @@ import Leaderboard from './Leaderboard';
 
 // ── Rank config ───────────────────────────────────────────────────
 function getRank(user) {
-  const { gamesPlayed = 0, gamesWon = 0, totalProfit = 0 } = user ?? {};
+  const { gamesPlayed = 0, gamesWon = 0, totalProfit = 0, rankBonus = 0 } = user ?? {};
   const score = gamesPlayed > 0
-    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50)
+    ? Math.round((gamesWon / gamesPlayed) * 1000 + totalProfit * 0.1 + gamesWon * 50 + rankBonus)
     : 0;
   if (gamesPlayed === 0)  return { label: 'NIEKLASYFIKOWANY', color: '#6b7280', glow: '#6b7280', cardRank: '?',  cardSuit: '✦', score };
   if (score >= 3000)      return { label: 'JOKER',            color: '#fbbf24', glow: '#f59e0b', cardRank: 'JK', cardSuit: '★', score };
