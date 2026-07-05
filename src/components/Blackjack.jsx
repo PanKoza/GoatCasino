@@ -410,7 +410,10 @@ export default function Blackjack({ onBack, username }) {
       let mainMsg, mainType;
       if (isSplit) {
         mainMsg = msgs.filter(Boolean).join(" | ");
-        mainType = totalDelta > 0 ? "win" : totalDelta === 0 ? "draw" : "lose";
+        // Determine type based on actual wins/draws in messages
+        const hasWin  = msgs.some(m => m?.includes('Wygrana'));
+        const hasDraw = msgs.some(m => m?.includes('Remis'));
+        mainType = hasWin ? "win" : hasDraw ? "draw" : "lose";
       } else {
         const dt2 = handTotal(dc);
         const pt2 = handTotal(hands[0]);

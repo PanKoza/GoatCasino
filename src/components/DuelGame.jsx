@@ -362,9 +362,15 @@ export default function DuelGame({ onBack, username }) {
   function resolveRound(currentDeck, finalBotHand, currentDealerHand, currentPlayerHand, playerCurrentBet, botCurrentBet) {
     setPhase(PHASE.DEALER_TURN);
 
+    const playerBJ = isBlackjack(currentPlayerHand);
+    const dealerBJ = isBlackjack(currentDealerHand);
+
     let dk = [...currentDeck];
     let dc = [...currentDealerHand];
-    while (handTotal(dc) < 17) dc.push({ ...dk.pop(), dealDelay: 0 });
+    // Dealer only draws more cards if no blackjack
+    if (!dealerBJ) {
+      while (handTotal(dc) < 17) dc.push({ ...dk.pop(), dealDelay: 0 });
+    }
     setDeck(dk);
     setDealerHand(dc);
 
@@ -373,15 +379,21 @@ export default function DuelGame({ onBack, username }) {
       const pt = handTotal(currentPlayerHand);
       const bt = handTotal(finalBotHand);
 
-      function compare(handTotal, bet, isBustHand) {
+      function compare(handTot, bet, isBustHand, isHandBJ) {
         if (isBustHand) return { delta: 0, type: 'lose' };
-        if (isBust(dc) || handTotal > dt) return { delta: bet * 2, type: 'win' };
-        if (handTotal < dt) return { delta: 0, type: 'lose' };
+        // Player blackjack vs dealer blackjack → draw
+        if (isHandBJ && dealerBJ) return { delta: bet, type: 'draw' };
+        // Player blackjack vs no dealer blackjack → 1.5x payout
+        if (isHandBJ && !dealerBJ) return { delta: Math.floor(bet * 2.5), type: 'win' };
+        // Dealer blackjack beats non-blackjack 21
+        if (dealerBJ) return { delta: 0, type: 'lose' };
+        if (isBust(dc) || handTot > dt) return { delta: bet * 2, type: 'win' };
+        if (handTot < dt) return { delta: 0, type: 'lose' };
         return { delta: bet, type: 'draw' };
       }
 
-      const pResult = compare(pt, playerCurrentBet, isBust(currentPlayerHand));
-      const bResult = compare(bt, botCurrentBet, isBust(finalBotHand));
+      const pResult = compare(pt, playerCurrentBet, isBust(currentPlayerHand), playerBJ);
+      const bResult = compare(bt, botCurrentBet,    isBust(finalBotHand),      false);
 
       setPlayerBal(b => b + pResult.delta);
       setBotBal(b => b + bResult.delta);
@@ -393,7 +405,7 @@ export default function DuelGame({ onBack, username }) {
       };
       const m = msgs[pResult.type];
       setRoundMsg({
-        text: m[Math.floor(Math.random() * m.length)],
+        text: playerBJ && pResult.type === 'win' ? 'BLACKJACK! 🎰 Wypłata 1.5x!' : m[Math.floor(Math.random() * m.length)],
         pType: pResult.type,
         bType: bResult.type,
       });

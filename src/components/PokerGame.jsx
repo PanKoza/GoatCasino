@@ -262,9 +262,12 @@ function postBlindsAndDeal(state) {
 
   // Find first active player (UTG)
   let firstIdx = utg;
-  while (players[firstIdx].folded || players[firstIdx].allIn) {
+  let tries = 0;
+  while ((players[firstIdx].folded || players[firstIdx].allIn) && tries < n) {
     firstIdx = (firstIdx + 1) % n;
+    tries++;
   }
+  if (players[firstIdx].folded || players[firstIdx].allIn) firstIdx = -1;
 
   return {
     ...state,

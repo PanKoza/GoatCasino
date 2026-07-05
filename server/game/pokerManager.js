@@ -272,10 +272,12 @@ function dealHand(room) {
   room.log = [`Nowa ręka! SB: $${sb}, BB: $${bb}`];
 
   let firstIdx = utg;
-  while (room.players[firstIdx].folded || room.players[firstIdx].allIn) {
+  let tries = 0;
+  while ((room.players[firstIdx].folded || room.players[firstIdx].allIn) && tries < n) {
     firstIdx = (firstIdx + 1) % n;
-    if (firstIdx === utg) { firstIdx = -1; break; }
+    tries++;
   }
+  if (room.players[firstIdx].folded || room.players[firstIdx].allIn) firstIdx = -1;
   room.activeIdx = firstIdx;
 
   broadcast(room);
