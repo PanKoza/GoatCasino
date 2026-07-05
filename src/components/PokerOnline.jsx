@@ -248,6 +248,14 @@ export default function PokerOnline({ onBack, username }) {
   };
 
   const handleLeave = () => {
+    // If leaving mid-game (not from lobby and not after result already saved), record a loss
+    if (gs && gs.phase !== 'lobby' && !savedRef.current) {
+      savedRef.current = true;
+      const me = gs.players[gs.myIdx];
+      const chips = me?.chips ?? 0;
+      const profit = chips - 500;
+      api.saveGameResult(false, profit, chips, 'poker', -10).catch(() => {});
+    }
     socketRef.current?.emit('poker:leave');
     setScreen('lobby');
     setGs(null);
