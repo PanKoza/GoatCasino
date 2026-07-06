@@ -508,7 +508,8 @@ export default function PokerGame({ mode, onBack }) {
       : gs;
     // Remove busted players
     const alive = base.players.filter(p => p.chips > 0);
-    if (alive.length < 2) {
+    const humanAlive = alive.some(p => p.isHuman);
+    if (alive.length < 2 || !humanAlive) {
       // Save game result when game ends
       if (!savedRef.current) {
         savedRef.current = true;
